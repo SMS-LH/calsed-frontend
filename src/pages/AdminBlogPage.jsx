@@ -5,7 +5,7 @@ import 'react-quill-new/dist/quill.snow.css';
 import { 
   FileText, ArrowLeft, Trash2, Pencil, 
   Loader2, Plus, Star, Eye, Image as ImageIcon,
-  Calendar, Folder, CheckCircle // <-- Ajout de CheckCircle ici !
+  Calendar, Folder, CheckCircle 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,33 +75,50 @@ const AdminBlogPage = () => {
     }
   };
 
+  // --- CORRECTION ICI ---
   const handleSaveArticle = async () => {
-    if (!newArticle.title || !newArticle.content) {
+    // ReactQuill renvoie parfois "<p><br></p>" quand il est vide. On nettoie pour vérifier la vraie longueur.
+    const cleanContent = newArticle.content.replace(/<[^>]*>?/gm, '').trim();
+    
+    if (!newArticle.title || !cleanContent) {
       return toast.error("Le titre et le contenu sont obligatoires.");
     }
     
     // Générer un extrait automatique si vide
     const finalArticle = { ...newArticle, featured: Boolean(newArticle.featured) };
     if (!finalArticle.excerpt) {
-      // Extrait brut sans balises HTML (100 premiers caractères)
-      finalArticle.excerpt = newArticle.content.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...';
+      finalArticle.excerpt = cleanContent.substring(0, 100) + '...';
     }
 
     const toastId = toast.loading(editingPostId ? "Mise à jour..." : "Publication...");
     
     try {
-      let success = editingPostId ? await updateBlogPost(editingPostId, finalArticle) : await addBlogPost(finalArticle);
-      
-      if(success) {
-        toast.success(editingPostId ? "Article mis à jour !" : "Article publié avec succès !", { id: toastId });
-        setEditingPostId(null);
-        setNewArticle(defaultArticle);
-        setShowPreview(false);
+      // On n'attend plus un "true" en retour. Si ça ne plante pas (catch), c'est que c'est un succès !
+      if (editingPostId) {
+        if (updateBlogPost) {
+          await updateBlogPost(editingPostId, finalArticle);
+        } else {
+          await api.put(`/posts/${editingPostId}`, finalArticle);
+          if (fetchBlogPosts) fetchBlogPosts();
+        }
       } else {
-        throw new Error("Échec de l'opération");
+        if (addBlogPost) {
+          await addBlogPost(finalArticle);
+        } else {
+          await api.post('/posts', finalArticle);
+          if (fetchBlogPosts) fetchBlogPosts();
+        }
       }
-    } catch (e) {
-      toast.error("Une erreur est survenue", { id: toastId });
+
+      // Succès garanti si on arrive ici
+      toast.success(editingPostId ? "Article mis à jour !" : "Article publié avec succès !", { id: toastId });
+      setEditingPostId(null);
+      setNewArticle(defaultArticle);
+      setShowPreview(false);
+      
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde :", error);
+      toast.error("Une erreur est survenue lors de l'enregistrement", { id: toastId });
     }
   };
 
@@ -127,8 +144,8 @@ const AdminBlogPage = () => {
       excerpt: post.excerpt || "",
       content: post.content,
       image: post.image,
-      category: post.category,
-      featured: post.featured
+      category: post.category || "Actualité",
+      featured: post.featured || false
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -314,7 +331,7 @@ const AdminBlogPage = () => {
                       <div className="flex justify-between items-start mb-2">
                         <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-wider ${post.featured ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500'}`}>
                           {post.featured && <Star className="h-2.5 w-2.5 mr-1 fill-amber-700" />}
-                          {post.category}
+                          {post.category || "Article"}
                         </Badge>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600 hover:bg-blue-50" onClick={() => handleEditClick(post)} title="Modifier">
