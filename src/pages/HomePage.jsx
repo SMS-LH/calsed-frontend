@@ -59,18 +59,17 @@ const HomePage = () => {
     .filter(post => post.featured === true || post.featured === "true")
     .slice(0, 3);
 
-  const getImageUrl = (imagePath) => {
+const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
 
-  // 1. Si c'est déjà un lien Cloudinary (commence par http), on le laisse tel quel
-  if (imagePath.startsWith('http')) return imagePath;
+  // Si l'image vient de Cloudinary, on l'affiche telle quelle !
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
 
-  // 2. Si c'est un vieux lien (/uploads/...), on ajoute l'adresse de ton BACKEND
-  // Remplace l'URL ci-dessous par ton vrai lien Render
-  const backendUrl = "https://calsed-api.onrender.com/api"; 
-  
-  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  return `${backendUrl}${cleanPath}`;
+  // Fallback pour les vieilles images locales (à éviter à l'avenir)
+  const baseUrl = "https://calsed-api.onrender.com";
+  return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
 };
 
   return (
