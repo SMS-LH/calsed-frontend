@@ -59,13 +59,18 @@ const HomePage = () => {
     .filter(post => post.featured === true || post.featured === "true")
     .slice(0, 3);
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
-    const baseUrl = (process.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
-    return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
-  };
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
 
+  // Si l'URL vient de Cloudinary (commence par http), on la touche PAS
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+
+  // Uniquement pour les vieux fichiers locaux (fallback)
+  const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
+  return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+};
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 antialiased selection:bg-[#0A2A5C] selection:text-white">
       

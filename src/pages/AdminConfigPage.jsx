@@ -45,24 +45,22 @@ const AdminConfigPage = () => {
     fetchSiteImages();
   }, []);
 
-  const fetchSiteImages = async () => {
-    try {
-      const { data } = await api.get('/settings');
-      const settingsData = data?.data || data || {};
-      
-      setSiteImages({
-        heroImage: settingsData.heroImage || "",
-        philImage1: settingsData.philImage1 || "",
-        philImage2: settingsData.philImage2 || "",
-        schoolImage: settingsData.schoolImage || ""
-      });
-    } catch (e) { 
-      console.error("Erreur chargement config", e);
-      toast.error("Impossible de charger les images du site");
-    } finally {
-      setIsLoadingConfig(false);
-    }
-  };
+const fetchSiteImages = async () => {
+  try {
+    const { data } = await api.get('/settings');
+    // On prend l'objet tel quel puisque le backend renvoie les champs à la racine
+    setSiteImages({
+      heroImage: data.heroImage || "",
+      philImage1: data.philImage1 || "",
+      philImage2: data.philImage2 || "" ,
+      schoolImage: data.schoolImage || ""
+    });
+  } catch (e) { 
+    toast.error("Erreur de chargement des images");
+  } finally {
+    setIsLoadingConfig(false);
+  }
+};
 
   const handleSaveImages = async () => {
     const toastId = toast.loading("Mise à jour des images en cours...");
