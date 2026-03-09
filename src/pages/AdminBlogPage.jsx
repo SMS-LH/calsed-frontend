@@ -22,7 +22,8 @@ import api from "../api/axios";
 const AdminBlogPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { blogPosts, addBlogPost, updateBlogPost, deleteBlogPost, fetchBlogPosts } = useContent();
+  // On récupère uniquement blogPosts et fetchBlogPosts du contexte
+  const { blogPosts, fetchBlogPosts } = useContent();
 
   const [uploading, setUploading] = useState(false);
   const [editingPostId, setEditingPostId] = useState(null);
@@ -75,75 +76,75 @@ const AdminBlogPage = () => {
     }
   };
 
-  // --- CORRECTION ICI ---
+  // --- SAUVEGARDE DIRECTE API (CORRIGÉE) ---
   const handleSaveArticle = async () => {
-    // ReactQuill renvoie parfois "<p><br></p>" quand il est vide. On nettoie pour vérifier la vraie longueur.
+    // Nettoyage pour vérifier si l'éditeur n'est pas rempli que de balises vides
     const cleanContent = newArticle.content.replace(/<[^>]*>?/gm, '').trim();
     
     if (!newArticle.title || !cleanContent) {
       return toast.error("Le titre et le contenu sont obligatoires.");
     }
     
-    // Générer un extrait automatique si vide
+    // Préparation finale de l'objet
     const finalArticle = { ...newArticle, featured: Boolean(newArticle.featured) };
     if (!finalArticle.excerpt) {
       finalArticle.excerpt = cleanContent.substring(0, 100) + '...';
     }
 
-    const toastId = toast.loading(editingPostId ? "Mise à jour..." : "Publication...");
+    const toastId = toast.loading(editingPostId ? "Mise à jour en cours..." : "Publication en cours...");
     
     try {
-      // On n'attend plus un "true" en retour. Si ça ne plante pas (catch), c'est que c'est un succès !
+      // 1. On envoie directement au serveur via Axios pour garantir la détection d'erreur
       if (editingPostId) {
-        if (updateBlogPost) {
-          await updateBlogPost(editingPostId, finalArticle);
-        } else {
-          await api.put(`/posts/${editingPostId}`, finalArticle);
-          if (fetchBlogPosts) fetchBlogPosts();
-        }
+        await api.put(`/posts/${editingPostId}`, finalArticle);
       } else {
-        if (addBlogPost) {
-          await addBlogPost(finalArticle);
-        } else {
-          await api.post('/posts', finalArticle);
-          if (fetchBlogPosts) fetchBlogPosts();
-        }
+        await api.post('/posts', finalArticle);
       }
 
-      // Succès garanti si on arrive ici
-      toast.success(editingPostId ? "Article mis à jour !" : "Article publié avec succès !", { id: toastId });
+      // 2. Si on arrive ici, c'est que le serveur a dit OUI (Status 200/201) !
+      // On demande au contexte de rafraîchir la liste pour que l'article s'affiche.
+      if (fetchBlogPosts) {
+        await fetchBlogPosts();
+      }
+
+      // 3. On réinitialise l'interface
+      toast.success(editingPostId ? "Article mis à jour avec succès !" : "Article publié avec succès !", { id: toastId });
       setEditingPostId(null);
       setNewArticle(defaultArticle);
       setShowPreview(false);
       
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde :", error);
-      toast.error("Une erreur est survenue lors de l'enregistrement", { id: toastId });
+      console.error("Erreur Backend :", error.response?.data || error);
+      // On affiche le VRAI message d'erreur renvoyé par le backend
+      toast.error(error.response?.data?.message || "Erreur lors de la sauvegarde côté serveur", { id: toastId });
     }
   };
 
+  // --- SUPPRESSION DIRECTE API (CORRIGÉE) ---
   const handleDeleteArticle = async (postId, title) => {
     if (!window.confirm(`Supprimer définitivement l'article "${title}" ?`)) return;
+    
+    const toastId = toast.loading("Suppression en cours...");
     try {
-      if (deleteBlogPost) {
-        await deleteBlogPost(postId);
-      } else {
-        await api.delete(`/posts/${postId}`);
-        if(fetchBlogPosts) await fetchBlogPosts();
+      await api.delete(`/posts/${postId}`);
+      
+      if(fetchBlogPosts) {
+        await fetchBlogPosts();
       }
-      toast.success("Article supprimé de la base de données.");
+      toast.success("Article supprimé de la base de données.", { id: toastId });
     } catch (error) { 
-      toast.error("Erreur lors de la suppression."); 
+      console.error("Erreur Backend Suppression :", error.response?.data || error);
+      toast.error("Erreur lors de la suppression.", { id: toastId }); 
     }
   };
 
   const handleEditClick = (post) => {
     setEditingPostId(post.id || post._id);
     setNewArticle({
-      title: post.title,
+      title: post.title || "",
       excerpt: post.excerpt || "",
-      content: post.content,
-      image: post.image,
+      content: post.content || "",
+      image: post.image || "",
       category: post.category || "Actualité",
       featured: post.featured || false
     });

@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Settings2, ArrowLeft, Trash2, Loader2, Save, 
-  Image as ImageIcon, Users, LayoutTemplate,
-  Linkedin, Mail, Briefcase, X, Plus
+  Image as ImageIcon, Users, ImagePlus,
+  Linkedin, Mail, Briefcase, Plus, School, LayoutTemplate
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,39 +33,42 @@ const AdminConfigPage = () => {
     email: "" 
   });
 
-  // --- ÉTATS ACCUEIL ---
-  const [homeConfig, setHomeConfig] = useState({
-    heroTitle: "", heroSubtitle: "", heroImage: "", 
-    philoTitle: "", philoText: "", philImage1: "", philImage2: "",
-    servicesTitle: "", servicesBadge: "", ctaTitle: ""
+  // --- ÉTATS IMAGES DU SITE (Simplifié : uniquement les images) ---
+  const [siteImages, setSiteImages] = useState({
+    heroImage: "", 
+    philImage1: "", 
+    philImage2: "",
+    schoolImage: "" // <-- Nouvelle image pour la page Équipe
   });
 
   useEffect(() => {
-    fetchHomeConfig();
+    fetchSiteImages();
   }, []);
 
-  const fetchHomeConfig = async () => {
+  const fetchSiteImages = async () => {
     try {
       const { data } = await api.get('/settings');
-      if (data && data.data) {
-        setHomeConfig(data.data);
-      } else if (data && Object.keys(data).length > 0) {
-        setHomeConfig(data);
-      }
+      const settingsData = data?.data || data || {};
+      
+      setSiteImages({
+        heroImage: settingsData.heroImage || "",
+        philImage1: settingsData.philImage1 || "",
+        philImage2: settingsData.philImage2 || "",
+        schoolImage: settingsData.schoolImage || ""
+      });
     } catch (e) { 
       console.error("Erreur chargement config", e);
-      toast.error("Impossible de charger la configuration de l'accueil");
+      toast.error("Impossible de charger les images du site");
     } finally {
       setIsLoadingConfig(false);
     }
   };
 
-  const handleSaveHomeConfig = async () => {
-    const toastId = toast.loading("Mise à jour du site public...");
+  const handleSaveImages = async () => {
+    const toastId = toast.loading("Mise à jour des images en cours...");
     try {
-      await api.put('/settings', homeConfig);
-      toast.success("Site mis à jour avec succès !", { id: toastId });
-      localStorage.setItem("calsed_home_config", JSON.stringify(homeConfig));
+      await api.put('/settings', siteImages);
+      toast.success("Images mises à jour avec succès !", { id: toastId });
     } catch (error) {
       toast.error("Erreur de sauvegarde sur le serveur.", { id: toastId });
     }
@@ -90,7 +92,7 @@ const AdminConfigPage = () => {
       const imageUrl = typeof data === 'string' ? data : data.url;
       
       if (type === 'config' && fieldName) {
-        setHomeConfig(prev => ({ ...prev, [fieldName]: imageUrl }));
+        setSiteImages(prev => ({ ...prev, [fieldName]: imageUrl }));
       } else if (type === 'member') {
         setNewMember(prev => ({ ...prev, image: imageUrl }));
       }
@@ -126,13 +128,115 @@ const AdminConfigPage = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="bureau" className="space-y-6">
+        <Tabs defaultValue="images" className="space-y-6">
           <TabsList className="bg-white p-1 h-auto flex-wrap border shadow-sm rounded-xl">
+            <TabsTrigger value="images" className="gap-2 text-base px-6 py-3"><ImagePlus className="h-4 w-4"/> Médias & Images</TabsTrigger>
             <TabsTrigger value="bureau" className="gap-2 text-base px-6 py-3"><Users className="h-4 w-4"/> Le Bureau CALSED</TabsTrigger>
-            <TabsTrigger value="accueil" className="gap-2 text-base px-6 py-3"><LayoutTemplate className="h-4 w-4"/> Textes de l'Accueil</TabsTrigger>
           </TabsList>
 
-          {/* ONGLET 1 : LE BUREAU */}
+          {/* ONGLET 1 : IMAGES DU SITE (Nouveau design) */}
+          <TabsContent value="images">
+            <Card className="border-0 shadow-sm bg-white">
+              <CardHeader className="bg-slate-100/50 border-b flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-[#0A2A5C] text-xl">Images institutionnelles</CardTitle>
+                  <CardDescription>Gérez les photos principales affichées sur les pages publiques (Accueil et Équipe).</CardDescription>
+                </div>
+                <Button onClick={handleSaveImages} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
+                  <Save className="h-4 w-4 mr-2" /> Enregistrer les images
+                </Button>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid md:grid-cols-2 gap-10">
+                  
+                  {/* Image Accueil - Hero */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
+                      <LayoutTemplate className="h-4 w-4 text-[#0A2A5C]" /> Accueil : Bannière Principale
+                    </Label>
+                    <p className="text-xs text-slate-500 mb-2">L'image de fond tout en haut de la page d'accueil.</p>
+                    <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
+                      {siteImages.heroImage ? (
+                        <img src={siteImages.heroImage} className="w-full h-full object-cover" alt="Hero"/>
+                      ) : (
+                        <div className="flex flex-col h-full items-center justify-center text-slate-400">
+                          <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
+                          <span className="text-xs">Aucune image</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'heroImage')} disabled={uploading}/>
+                        <Button variant="secondary" className="pointer-events-none">Modifier l'image</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Lycée - Équipe */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
+                      <School className="h-4 w-4 text-[#0A2A5C]" /> Équipe : Photo du Lycée
+                    </Label>
+                    <p className="text-xs text-slate-500 mb-2">L'image illustrative du LSED sur la page Équipe.</p>
+                    <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
+                      {siteImages.schoolImage ? (
+                        <img src={siteImages.schoolImage} className="w-full h-full object-cover" alt="Lycée"/>
+                      ) : (
+                        <div className="flex flex-col h-full items-center justify-center text-slate-400">
+                          <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
+                          <span className="text-xs">Aucune image</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'schoolImage')} disabled={uploading}/>
+                        <Button variant="secondary" className="pointer-events-none">Modifier l'image</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Mission 1 */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Mission 1 (Verticale)</Label>
+                    <p className="text-xs text-slate-500 mb-2">Première image de la section "Une vision commune".</p>
+                    <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
+                      {siteImages.philImage1 ? (
+                        <img src={siteImages.philImage1} className="w-full h-full object-cover" alt="Mission 1"/>
+                      ) : (
+                        <div className="flex flex-col h-full items-center justify-center text-slate-400">
+                          <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'philImage1')} disabled={uploading}/>
+                        <Button size="sm" variant="secondary" className="pointer-events-none text-xs">Modifier</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Mission 2 */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Mission 2 (Verticale)</Label>
+                    <p className="text-xs text-slate-500 mb-2">Deuxième image de la section "Une vision commune".</p>
+                    <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
+                      {siteImages.philImage2 ? (
+                        <img src={siteImages.philImage2} className="w-full h-full object-cover" alt="Mission 2"/>
+                      ) : (
+                        <div className="flex flex-col h-full items-center justify-center text-slate-400">
+                          <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'philImage2')} disabled={uploading}/>
+                        <Button size="sm" variant="secondary" className="pointer-events-none text-xs">Modifier</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ONGLET 2 : LE BUREAU (Inchangé mais avec un style épuré) */}
           <TabsContent value="bureau">
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Formulaire d'ajout */}
@@ -148,7 +252,7 @@ const AdminConfigPage = () => {
                     </Avatar>
                     <div className="flex-1">
                       <Label className="text-xs mb-1 block uppercase font-bold text-slate-500">Photo de profil</Label>
-                      <Input type="file" className="text-xs cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'member')} disabled={uploading}/>
+                      <Input type="file" className="text-xs cursor-pointer bg-white" accept="image/*" onChange={(e) => handleFileUpload(e, 'member')} disabled={uploading}/>
                     </div>
                   </div>
 
@@ -169,12 +273,12 @@ const AdminConfigPage = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2"><Linkedin className="h-3 w-3"/> Lien LinkedIn</Label>
+                    <Label className="flex items-center gap-2"><Linkedin className="h-3 w-3 text-blue-600"/> Lien LinkedIn</Label>
                     <Input placeholder="https://linkedin.com/in/..." value={newMember.linkedin} onChange={(e) => setNewMember({...newMember, linkedin: e.target.value})} />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2"><Mail className="h-3 w-3"/> Email (Contact public)</Label>
+                    <Label className="flex items-center gap-2"><Mail className="h-3 w-3 text-slate-500"/> Email (Contact public)</Label>
                     <Input placeholder="contact@domaine.com" value={newMember.email} onChange={(e) => setNewMember({...newMember, email: e.target.value})} />
                   </div>
 
@@ -188,7 +292,7 @@ const AdminConfigPage = () => {
               <Card className="border-0 shadow-sm bg-white">
                 <CardHeader className="border-b bg-slate-50/50">
                   <CardTitle className="flex items-center gap-2 text-[#0A2A5C]"><Briefcase className="h-5 w-5"/> Bureau Actuel</CardTitle>
-                  <CardDescription>Membres affichés sur la page d'accueil</CardDescription>
+                  <CardDescription>Membres affichés sur la page Équipe</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y max-h-[600px] overflow-y-auto custom-scrollbar">
@@ -197,7 +301,7 @@ const AdminConfigPage = () => {
                         <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12 border shadow-sm">
                             <AvatarImage src={m.image} />
-                            <AvatarFallback className="bg-blue-100 text-blue-700 font-bold">{m.name ? m.name[0] : '?'}</AvatarFallback>
+                            <AvatarFallback className="bg-[#0A2A5C] text-white font-bold">{m.name ? m.name[0] : '?'}</AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="font-bold text-[#0A2A5C] leading-tight">{m.name}</p>
@@ -214,7 +318,8 @@ const AdminConfigPage = () => {
                       </div>
                     ))}
                     {teamMembers.length === 0 && (
-                      <div className="p-8 text-center text-slate-400">
+                      <div className="p-10 text-center text-slate-400">
+                        <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
                         <p className="text-sm">Aucun membre dans le bureau.</p>
                       </div>
                     )}
@@ -224,85 +329,6 @@ const AdminConfigPage = () => {
             </div>
           </TabsContent>
 
-          {/* ONGLET 2 : ACCUEIL */}
-          <TabsContent value="accueil">
-            <Card className="border-0 shadow-sm bg-white">
-              <CardHeader className="bg-slate-100 border-b flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-[#0A2A5C]">Textes et Images de la page principale</CardTitle>
-                  <CardDescription>Modifiez les accroches visibles par tous les visiteurs.</CardDescription>
-                </div>
-                <Button onClick={handleSaveHomeConfig} className="bg-amber-500 hover:bg-amber-600 text-white shadow-md">
-                  <Save className="h-4 w-4 mr-2" /> Enregistrer le site
-                </Button>
-              </CardHeader>
-              <CardContent className="p-6 space-y-8">
-                
-                {/* Section Hero */}
-                <div className="space-y-4 p-5 bg-blue-50/50 rounded-xl border border-blue-100">
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-[#0A2A5C] flex items-center gap-2">
-                    <span className="bg-[#0A2A5C] text-white h-6 w-6 rounded-full flex items-center justify-center text-xs">1</span> 
-                    Haut de page (Hero)
-                  </h4>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="space-y-2"><Label>Grand Titre</Label><Input value={homeConfig.heroTitle} onChange={(e) => setHomeConfig({...homeConfig, heroTitle: e.target.value})} className="font-bold bg-white" /></div>
-                      <div className="space-y-2"><Label>Sous-titre explicatif</Label><Textarea value={homeConfig.heroSubtitle} onChange={(e) => setHomeConfig({...homeConfig, heroSubtitle: e.target.value})} className="bg-white resize-none" /></div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Image d'arrière-plan principale</Label>
-                      <div className="h-32 w-full bg-slate-200 rounded-lg overflow-hidden border relative">
-                        {homeConfig.heroImage ? <img src={homeConfig.heroImage} className="w-full h-full object-cover" alt="Hero"/> : <div className="flex h-full items-center justify-center text-slate-400"><ImageIcon className="h-8 w-8"/></div>}
-                      </div>
-                      <Input type="file" className="text-xs bg-white cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'heroImage')} disabled={uploading}/>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section Philosophie */}
-                <div className="space-y-4 p-5 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-emerald-800 flex items-center gap-2">
-                    <span className="bg-emerald-600 text-white h-6 w-6 rounded-full flex items-center justify-center text-xs">2</span> 
-                    Bloc Philosophie / Mission
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2"><Label>Titre de la section</Label><Input value={homeConfig.philoTitle} onChange={(e) => setHomeConfig({...homeConfig, philoTitle: e.target.value})} className="bg-white" /></div>
-                    <div className="space-y-2"><Label>Texte explicatif</Label><Textarea value={homeConfig.philoText} onChange={(e) => setHomeConfig({...homeConfig, philoText: e.target.value})} className="bg-white h-24" /></div>
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div className="space-y-2">
-                        <Label className="text-xs">Image Illustrative 1</Label>
-                        <div className="flex gap-2 items-center">
-                          {homeConfig.philImage1 && <img src={homeConfig.philImage1} className="h-10 w-10 rounded object-cover border"/>}
-                          <Input type="file" className="text-xs bg-white cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'philImage1')} disabled={uploading}/>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs">Image Illustrative 2</Label>
-                        <div className="flex gap-2 items-center">
-                          {homeConfig.philImage2 && <img src={homeConfig.philImage2} className="h-10 w-10 rounded object-cover border"/>}
-                          <Input type="file" className="text-xs bg-white cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'philImage2')} disabled={uploading}/>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section Services */}
-                <div className="space-y-4 p-5 bg-amber-50/50 rounded-xl border border-amber-100">
-                  <h4 className="font-bold text-sm uppercase tracking-wider text-amber-800 flex items-center gap-2">
-                    <span className="bg-amber-600 text-white h-6 w-6 rounded-full flex items-center justify-center text-xs">3</span> 
-                    Services & Pied de page
-                  </h4>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="space-y-2"><Label>Petit badge coloré</Label><Input value={homeConfig.servicesBadge} onChange={(e) => setHomeConfig({...homeConfig, servicesBadge: e.target.value})} className="bg-white" /></div>
-                    <div className="space-y-2"><Label>Titre de la section Services</Label><Input value={homeConfig.servicesTitle} onChange={(e) => setHomeConfig({...homeConfig, servicesTitle: e.target.value})} className="bg-white" /></div>
-                    <div className="space-y-2"><Label>Titre d'appel à l'action (Bas)</Label><Input value={homeConfig.ctaTitle} onChange={(e) => setHomeConfig({...homeConfig, ctaTitle: e.target.value})} className="bg-white font-bold" /></div>
-                  </div>
-                </div>
-
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight, Briefcase, Network, GraduationCap,
   ShieldCheck, Users2, Image as ImageIcon,
-  Building2, Lightbulb, Globe2, ChevronRight, Quote
+  Building2, Lightbulb, ChevronRight, Quote
 } from "lucide-react";
 import { useContent } from "@/context/ContentContext";
 import api from "../api/axios";
@@ -27,34 +27,31 @@ const HomePage = () => {
   const { blogPosts } = useContent();
   const { pathname } = useLocation();
 
-  const [config, setConfig] = useState({
-    heroTitle: "L'Excellence comme Héritage.",
-    heroSubtitle: "Plateforme officielle du Collectif des Anciens du Lycée Scientifique d'Excellence de Diourbel. Fédérer les talents, servir la communauté.",
+  // On ne stocke plus que les images configurables par l'admin
+  const [images, setImages] = useState({
     heroImage: "",
-    philoTitle: "Une Vision Commune",
-    philoText: "Le CALSED structure la force de son réseau pour catalyser les opportunités professionnelles et soutenir le développement de notre alma mater.",
     philImage1: "",
     philImage2: "",
-    servicesTitle: "Nos Piliers d'Action",
-    servicesBadge: "Missions CALSED",
-    ctaTitle: "Rejoignez le Mouvement",
   });
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    fetchHomeConfig();
+    fetchHomeImages();
   }, [pathname]);
 
-  const fetchHomeConfig = async () => {
+  const fetchHomeImages = async () => {
     try {
       const { data } = await api.get('/settings');
-      if (data && data.data) {
-        setConfig(prev => ({ ...prev, ...data.data }));
-      } else if (data && Object.keys(data).length > 0) {
-        setConfig(prev => ({ ...prev, ...data }));
-      }
+      const settingsData = data?.data || data || {};
+      
+      // On extrait uniquement les images des paramètres
+      setImages({
+        heroImage: settingsData.heroImage || "",
+        philImage1: settingsData.philImage1 || "",
+        philImage2: settingsData.philImage2 || "",
+      });
     } catch (error) {
-      console.error("Erreur de chargement de la configuration.");
+      console.error("Erreur de chargement des images de la page d'accueil.");
     }
   };
 
@@ -77,9 +74,9 @@ const HomePage = () => {
         {/* Overlay premium */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A2A5C] to-[#051630] z-0"></div>
         
-        {config.heroImage ? (
+        {images.heroImage ? (
            <div className="absolute inset-0 opacity-30 z-0 mix-blend-overlay">
-             <img src={getImageUrl(config.heroImage)} alt="Fond Hero" className="w-full h-full object-cover" />
+             <img src={getImageUrl(images.heroImage)} alt="Fond Hero" className="w-full h-full object-cover" />
            </div>
         ) : (
           <div className="absolute inset-0 opacity-10 z-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '48px 48px' }}></div>
@@ -96,11 +93,11 @@ const HomePage = () => {
               </motion.div>
               
               <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-8 leading-[1.1] tracking-tight drop-shadow-lg">
-                {config.heroTitle}
+                L'Excellence comme Héritage.
               </motion.h1>
               
               <motion.p variants={fadeUp} className="text-lg md:text-xl text-blue-100/80 mb-12 leading-relaxed max-w-2xl mx-auto font-light">
-                {config.heroSubtitle}
+                Plateforme officielle du Collectif des Anciens du Lycée Scientifique d'Excellence de Diourbel. Fédérer les talents, servir la communauté.
               </motion.p>
               
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -152,10 +149,10 @@ const HomePage = () => {
                 <span className="text-amber-600 font-bold text-sm uppercase tracking-widest">Notre Mission</span>
               </div>
               <h2 className="text-3xl md:text-5xl font-black text-[#0A2A5C] mb-8 leading-tight tracking-tight">
-                {config.philoTitle}
+                Une Vision Commune
               </h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-10 font-light">
-                {config.philoText}
+                Le CALSED structure la force de son réseau pour catalyser les opportunités professionnelles et soutenir le développement de notre alma mater.
               </p>
               
               <div className="space-y-8">
@@ -187,8 +184,8 @@ const HomePage = () => {
                 
                 <div className="space-y-6 z-10 pt-12">
                       <div className="aspect-[3/4] bg-slate-100 rounded-none overflow-hidden shadow-lg border border-white">
-                        {config.philImage1 ? (
-                          <img src={getImageUrl(config.philImage1)} className="w-full h-full object-cover" alt="Mission" />
+                        {images.philImage1 ? (
+                          <img src={getImageUrl(images.philImage1)} className="w-full h-full object-cover" alt="Mission" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center"><Building2 className="w-10 h-10 text-slate-400"/></div>
                         )}
@@ -196,8 +193,8 @@ const HomePage = () => {
                 </div>
                 <div className="space-y-6 z-10">
                       <div className="aspect-[3/4] bg-slate-100 rounded-none overflow-hidden shadow-lg border border-white">
-                        {config.philImage2 ? (
-                          <img src={getImageUrl(config.philImage2)} className="w-full h-full object-cover" alt="Communauté" />
+                        {images.philImage2 ? (
+                          <img src={getImageUrl(images.philImage2)} className="w-full h-full object-cover" alt="Communauté" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-[#0A2A5C]/10 to-[#0A2A5C]/30 flex items-center justify-center"><Users2 className="w-10 h-10 text-[#0A2A5C]/40"/></div>
                         )}
@@ -218,9 +215,9 @@ const HomePage = () => {
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
             <div className="max-w-2xl">
-              <span className="text-amber-600 font-bold text-sm uppercase tracking-widest mb-4 block">{config.servicesBadge}</span>
+              <span className="text-amber-600 font-bold text-sm uppercase tracking-widest mb-4 block">Missions CALSED</span>
               <h2 className="text-3xl md:text-5xl font-black text-[#0A2A5C] tracking-tight">
-                {config.servicesTitle}
+                Nos Piliers d'Action
               </h2>
             </div>
             <Link to="/membre">
@@ -313,7 +310,7 @@ const HomePage = () => {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
 
         <div className="container mx-auto px-6 text-center relative z-10">
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">{config.ctaTitle}</h2>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">Rejoignez le Mouvement</h2>
             <p className="text-blue-100 max-w-2xl mx-auto mb-12 text-xl font-light leading-relaxed">
                 Rejoignez la plateforme, accédez à l'annuaire mondial des anciens élèves et participez à nos événements exclusifs.
             </p>

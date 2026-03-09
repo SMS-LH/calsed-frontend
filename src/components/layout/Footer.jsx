@@ -51,7 +51,7 @@ const Footer = () => {
     { name: "À Propos", href: "/equipe" },
     { name: "Blog", href: "/blog" },
     { name: "Boutique", href: "/boutique" },
-    { name: "Faire un Don", href: "/don" },
+    // { name: "Faire un Don", href: "/don" }, // <-- LIEN MASQUÉ TEMPORAIREMENT
     { name: "Contact", href: "/contact" },
   ];
 

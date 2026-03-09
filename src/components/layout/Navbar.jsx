@@ -51,7 +51,6 @@ const Navbar = () => {
   const isTransparent = location.pathname === "/" && !isScrolled;
   const cartCount = getItemCount(); 
 
-  // --- CORRECTION DÉPLOIEMENT : Gestion sécurisée des URLs d'images ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
@@ -59,14 +58,14 @@ const Navbar = () => {
     return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
   };
 
-  // --- LOGIQUE DE LIENS DYNAMIQUES ---
+  // --- LOGIQUE DE LIENS DYNAMIQUES (DON MASQUÉ) ---
   const commonLinks = [
     { name: "Accueil", href: "/" },
-    { name: "À Propos", href: "/equipe", icon: Users }, // MODIFIÉ ICI
+    { name: "À Propos", href: "/equipe", icon: Users },
     ...(isAuthenticated ? [{ name: "Événements", href: "/evenements", icon: Calendar }] : []),
     { name: "Blog", href: "/blog", icon: BookOpen },
     { name: "Boutique", href: "/boutique", icon: Store },
-    { name: "Faire un Don", href: "/don", icon: Heart },
+    // { name: "Faire un Don", href: "/don", icon: Heart }, // <-- MASQUÉ TEMPORAIREMENT
     { name: "Contact", href: "/contact", icon: Mail },
   ];
 
@@ -139,13 +138,12 @@ const Navbar = () => {
               </Link>
             ))}
             
-            {/* BOUTON ADHÉSION (MODIFIÉ) */}
             {!isAuthenticated && (
               <Link
                 to="/membre"
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                   isActive("/membre") // Si on est sur la page /membre
-                     ? "bg-[#FFD700] text-[#0A2A5C] font-bold shadow-sm" // Style Actif (Jaune)
+                   isActive("/membre")
+                     ? "bg-[#FFD700] text-[#0A2A5C] font-bold shadow-sm"
                      : isTransparent 
                        ? "text-white hover:bg-white/10" 
                        : "text-slate-700 hover:bg-slate-100"
@@ -159,7 +157,6 @@ const Navbar = () => {
           {/* ACTIONS DROITE */}
           <div className="flex items-center gap-2 lg:gap-4">
 
-            {/* ICÔNE PANIER DYNAMIQUE */}
             <Link to="/panier">
               <Button variant="ghost" size="icon" className={`relative transition-all ${isTransparent ? "text-white hover:bg-white/10" : "text-slate-700 hover:bg-slate-100"}`}>
                 <ShoppingCart className="h-5 w-5" />
@@ -171,14 +168,12 @@ const Navbar = () => {
               </Button>
             </Link>
             
-            {/* Profil Desktop */}
             <div className="hidden lg:block">
               {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className={`flex items-center gap-2 px-2 rounded-full ${isTransparent ? "text-white hover:bg-white/10" : ""}`}>
                       <Avatar className="h-8 w-8 border-2 border-white/20">
-                        {/* Utilisation de getImageUrl() pour l'avatar */}
                         <AvatarImage src={getImageUrl(user?.avatar)} alt={user?.name} />
                         <AvatarFallback className={user?.role === 'admin' ? "bg-red-600 text-white text-xs" : "bg-[#0A2A5C] text-white text-xs"}>
                             {user?.role === 'admin' ? <ShieldAlert className="h-4 w-4" /> : user?.name?.charAt(0)}
