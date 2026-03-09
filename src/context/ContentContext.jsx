@@ -1,9 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-// On garde les données mock UNIQUEMENT pour l'équipe (pas de backend pour ça encore)
-import { teamMembers as initialTeam } from "@/data/mockData";
 import { toast } from "sonner";
-
-// IMPORT DU PONT API SÉCURISÉ
 import api from "@/api/axios";
 
 const ContentContext = createContext();
@@ -11,25 +7,24 @@ const ContentContext = createContext();
 export const ContentProvider = ({ children }) => {
   // --- ÉTATS ---
   const [blogPosts, setBlogPosts] = useState([]);
-  const [products, setProducts] = useState([]); // État pour la boutique
+  const [products, setProducts] = useState([]); 
+  const [teamMembers, setTeamMembers] = useState([]); // Initialisé vide, chargé depuis DB
   const [isLoading, setIsLoading] = useState(true); 
   
-  // L'équipe reste en local/localStorage
-  const [teamMembers, setTeamMembers] = useState(() => {
-    try {
-      const saved = localStorage.getItem("calsed_team");
-      return saved ? JSON.parse(saved) : initialTeam;
-    } catch (e) {
-      return initialTeam;
-    }
-  });
-
   // --- FONCTIONS DE CHARGEMENT ---
+
+  const fetchTeam = useCallback(async () => {
+    try {
+      const res = await api.get('/team'); // On récupère les membres depuis MongoDB
+      setTeamMembers(res.data);
+    } catch (error) {
+      console.error("Erreur chargement équipe:", error);
+    }
+  }, []);
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
-      // APPEL AXIOS
       const res = await api.get('/posts');
       setBlogPosts(res.data);
     } catch (error) {
@@ -41,10 +36,7 @@ export const ContentProvider = ({ children }) => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      // APPEL AXIOS
       const res = await api.get('/products');
-      
-      // Normalisation de l'ID pour la compatibilité React
       const normalizedData = res.data.map(p => ({
         ...p,
         id: p._id ? p._id.toString() : p.id
@@ -59,38 +51,29 @@ export const ContentProvider = ({ children }) => {
   useEffect(() => {
     fetchPosts();
     fetchProducts(); 
-  }, [fetchPosts, fetchProducts]);
-
-  useEffect(() => {
-    localStorage.setItem("calsed_team", JSON.stringify(teamMembers));
-  }, [teamMembers]);
+    fetchTeam(); // On charge l'équipe au démarrage
+  }, [fetchPosts, fetchProducts, fetchTeam]);
 
   // --- FONCTIONS API (BLOG) ---
 
   const addBlogPost = async (newPost) => {
     try {
-      // APPEL AXIOS (headers et JSON.stringify gérés automatiquement)
       const res = await api.post('/posts', newPost);
-      
-      const savedPost = res.data;
-      setBlogPosts(prev => [savedPost, ...prev]);
+      setBlogPosts(prev => [res.data, ...prev]);
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Erreur lors de la création de l'article");
+      toast.error(error.response?.data?.message || "Erreur lors de la création");
       return false;
     }
   };
 
   const updateBlogPost = async (postId, updatedData) => {
     try {
-      // APPEL AXIOS
       const res = await api.put(`/posts/${postId}`, updatedData);
-      
-      const updatedPost = res.data;
-      setBlogPosts(prev => prev.map(p => (p._id === postId || p.id === postId) ? updatedPost : p));
+      setBlogPosts(prev => prev.map(p => (p._id === postId || p.id === postId) ? res.data : p));
       return true;
     } catch (error) {
-      toast.error(error.response?.data?.message || "Erreur lors de la modification");
+      toast.error("Erreur lors de la modification");
       return false;
     }
   };
@@ -99,37 +82,49 @@ export const ContentProvider = ({ children }) => {
 
   const addProduct = async (newProductData) => {
     try {
-      // APPEL AXIOS
       await api.post('/products', newProductData);
-      
-      await fetchProducts(); // Rafraîchissement automatique
+      await fetchProducts(); 
       return true;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Le serveur ne répond pas";
-      toast.error(`Erreur: ${errorMsg}`);
+      toast.error("Erreur serveur boutique");
       return false;
     }
   };
 
   const removeProduct = async (productId) => {
     try {
-      // APPEL AXIOS
       await api.delete(`/products/${productId}`);
-      
       setProducts(prev => prev.filter(p => (p._id !== productId && p.id !== productId)));
-      toast.success("Produit retiré de la vente");
+      toast.success("Produit retiré");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Erreur lors de la suppression");
+      toast.error("Erreur suppression produit");
     }
   };
 
-  // --- FONCTIONS LOCALES (ÉQUIPE) ---
-  const addTeamMember = (member) => {
-    setTeamMembers(prev => [...prev, member]);
+  // --- FONCTIONS API (ÉQUIPE / BUREAU) ---
+  // On remplace les fonctions locales par des appels API
+  
+  const addTeamMember = async (memberData) => {
+    try {
+      const res = await api.post('/team', memberData);
+      setTeamMembers(prev => [...prev, res.data]);
+      toast.success("Membre ajouté au bureau national");
+      return true;
+    } catch (error) {
+      toast.error("Erreur lors de l'ajout du membre");
+      return false;
+    }
   };
 
-  const removeTeamMember = (indexToRemove) => {
-    setTeamMembers(prev => prev.filter((_, index) => index !== indexToRemove));
+  const removeTeamMember = async (memberId) => {
+    try {
+      // On utilise l'ID MongoDB (_id) pour supprimer
+      await api.delete(`/team/${memberId}`);
+      setTeamMembers(prev => prev.filter(m => m._id !== memberId));
+      toast.success("Membre retiré du bureau");
+    } catch (error) {
+      toast.error("Erreur lors de la suppression du membre");
+    }
   };
 
   const value = {
@@ -137,7 +132,6 @@ export const ContentProvider = ({ children }) => {
     blogPosts,
     products, 
     isLoading,
-    // Cette propriété filtre dynamiquement les articles marqués comme favoris pour la HomePage
     featuredPosts: blogPosts.filter(p => p.featured === true || p.featured === "true"),
     addTeamMember,
     removeTeamMember,
@@ -145,7 +139,7 @@ export const ContentProvider = ({ children }) => {
     updateBlogPost,
     addProduct, 
     removeProduct, 
-    refreshContent: () => { fetchPosts(); fetchProducts(); }
+    refreshContent: () => { fetchPosts(); fetchProducts(); fetchTeam(); }
   };
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;

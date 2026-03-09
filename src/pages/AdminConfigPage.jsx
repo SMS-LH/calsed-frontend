@@ -82,14 +82,20 @@ const AdminConfigPage = () => {
     formData.append('image', file);
 
     setUploading(true);
-    const toastId = toast.loading("Téléchargement de l'image...");
+    const toastId = toast.loading("Téléchargement vers Cloudinary...");
 
     try {
       const { data } = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      toast.success("Image téléchargée !", { id: toastId });
+
+      // Avec Cloudinary, 'data' est directement l'URL (https://res.cloudinary.com/...)
+      // Si ton backend renvoie un objet { url: "..." }, utilise data.url
       const imageUrl = typeof data === 'string' ? data : data.url;
+      
+      if (!imageUrl) throw new Error("URL d'image non reçue");
+
+      toast.success("Image sauvegardée dans le cloud !", { id: toastId });
       
       if (type === 'config' && fieldName) {
         setSiteImages(prev => ({ ...prev, [fieldName]: imageUrl }));
@@ -97,7 +103,8 @@ const AdminConfigPage = () => {
         setNewMember(prev => ({ ...prev, image: imageUrl }));
       }
     } catch (error) {
-      toast.error("Erreur serveur", { id: toastId });
+      console.error("Erreur upload:", error);
+      toast.error("Erreur lors de l'envoi au cloud", { id: toastId });
     } finally {
       setUploading(false);
     }
