@@ -108,9 +108,7 @@ const BlogPostPage = () => {
     setLikes(newLikes);
 
     try {
-      // API call
       await api.put(`/posts/${id}/like`, { userId: currentUserId });
-      
       refreshContent();
       if (!isLiked) toast.success("Vous aimez cet article !");
     } catch (err) {
@@ -126,7 +124,6 @@ const BlogPostPage = () => {
 
     setIsSubmitting(true);
     try {
-      // Appel API via Axios (le token est envoyé automatiquement)
       await api.post(`/posts/${id}/comment`, {
         author: user.name,
         authorId: user._id || user.id,
@@ -288,12 +285,14 @@ const BlogPostPage = () => {
           </div>
 
           <div className="lg:col-span-10 lg:col-start-3">
+            {/* L'encapsulation ReactQuill CORRIGÉE pour une lecture optimale */}
             <div 
-              className="prose prose-lg prose-slate max-w-none 
+              className="prose prose-lg prose-slate mx-auto max-w-3xl break-words
               prose-headings:font-display prose-headings:text-[#0A2A5C] prose-headings:font-bold
               prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg
               prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
-              prose-img:rounded-3xl prose-img:shadow-lg prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
+              prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
+              prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
               dangerouslySetInnerHTML={{ __html: post.content || post.excerpt }} 
             />
 
