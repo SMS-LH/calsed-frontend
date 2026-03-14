@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+
+// --- IMPORTS TIPTAP ---
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import LinkExtension from '@tiptap/extension-link';
+import ImageExtension from '@tiptap/extension-image';
+
 import { 
   FileText, ArrowLeft, Trash2, Pencil, 
-  Loader2, Plus, Star, Eye, Image as ImageIcon,
-  Calendar, Folder, CheckCircle 
+  Loader2, Plus, Star, Image as ImageIcon,
+  Calendar, Folder, CheckCircle,
+  Bold, Italic, List, ListOrdered, Undo, Redo, Heading1, Heading2, Link as LinkIcon 
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +26,65 @@ import { useContent } from "@/context/ContentContext";
 import { toast } from "sonner";
 import api from "../api/axios";
 
+// --- SOUS-COMPOSANT : BARRE D'OUTILS TIPTAP ---
+const MenuBar = ({ editor }) => {
+  if (!editor) return null;
+
+  const addLink = () => {
+    const url = window.prompt('URL du lien :');
+    if (url) editor.chain().focus().setLink({ href: url }).run();
+  };
+
+  return (
+    <div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50 rounded-t-xl">
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''}>
+        <Heading1 className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={editor.isActive('heading', { level: 3 }) ? 'bg-slate-200' : ''}>
+        <Heading2 className="h-4 w-4" />
+      </Button>
+      
+      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+      
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'bg-slate-200' : ''}>
+        <Bold className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'bg-slate-200' : ''}>
+        <Italic className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'bg-slate-200' : ''}>
+        <span className="line-through font-bold">S</span>
+      </Button>
+      
+      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+      
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'bg-slate-200' : ''}>
+        <List className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'bg-slate-200' : ''}>
+        <ListOrdered className="h-4 w-4" />
+      </Button>
+      
+      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+
+      <Button size="sm" variant="ghost" type="button" onClick={addLink} className={editor.isActive('link') ? 'bg-slate-200' : ''}>
+        <LinkIcon className="h-4 w-4" />
+      </Button>
+
+      <div className="flex-1" />
+
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().undo().run()}>
+        <Undo className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().redo().run()}>
+        <Redo className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
+
+// --- COMPOSANT PRINCIPAL ---
 const AdminBlogPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -39,27 +105,30 @@ const AdminBlogPage = () => {
   };
   const [newArticle, setNewArticle] = useState(defaultArticle);
 
-  // --- CONFIGURATION DE L'ÉDITEUR ---
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-      ['link', 'image', 'video'], 
-      ['clean']
+  // --- INITIALISATION TIPTAP ---
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      LinkExtension.configure({ openOnClick: false }),
+      ImageExtension,
     ],
-  };
+    content: newArticle.content,
+    onUpdate: ({ editor }) => {
+      setNewArticle(prev => ({ ...prev, content: editor.getHTML() }));
+    },
+    editorProps: {
+      attributes: {
+        // Ces classes Tailwind définissent l'apparence à l'intérieur de l'éditeur
+        class: 'prose prose-slate max-w-none focus:outline-none min-h-[300px] p-6 text-slate-700 bg-white rounded-b-xl',
+      },
+    },
+  });
 
   // --- UTILITAIRE IMAGE : CORRIGÉ POUR CREATE REACT APP ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
     
-    // Si c'est Cloudinary ou Base64, on ne touche à rien
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
-      return imagePath;
-    }
-    
-    // On utilise process.env car tu es sur Create React App
     const baseUrl = process.env.REACT_APP_API_URL 
       ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
       : "https://calsed-api.onrender.com";
@@ -85,7 +154,6 @@ const AdminBlogPage = () => {
       });
       toast.success("Image téléchargée !", { id: toastId });
       
-      // On récupère directement l'URL Cloudinary
       const imageUrl = typeof data === 'string' ? data : data.url;
       setNewArticle(prev => ({ ...prev, image: imageUrl }));
     } catch (error) {
@@ -96,7 +164,6 @@ const AdminBlogPage = () => {
   };
 
   const handleSaveArticle = async () => {
-    // Nettoyage pour vérifier si l'éditeur n'est pas vide
     const cleanContent = newArticle.content.replace(/<[^>]*>?/gm, '').trim();
     
     if (!newArticle.title || !cleanContent) {
@@ -122,8 +189,11 @@ const AdminBlogPage = () => {
       }
 
       toast.success(editingPostId ? "Article mis à jour avec succès !" : "Article publié avec succès !", { id: toastId });
+      
+      // Reset
       setEditingPostId(null);
       setNewArticle(defaultArticle);
+      if (editor) editor.commands.setContent(""); // On vide Tiptap
       setShowPreview(false);
       
     } catch (error) {
@@ -150,20 +220,28 @@ const AdminBlogPage = () => {
 
   const handleEditClick = (post) => {
     setEditingPostId(post.id || post._id);
+    const postContent = post.content || "";
+    
     setNewArticle({
       title: post.title || "",
       excerpt: post.excerpt || "",
-      content: post.content || "",
+      content: postContent,
       image: post.image || "",
       category: post.category || "Actualité",
       featured: post.featured || false
     });
+
+    if (editor) {
+      editor.commands.setContent(postContent);
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancelEdit = () => {
     setEditingPostId(null);
     setNewArticle(defaultArticle);
+    if (editor) editor.commands.setContent("");
     setShowPreview(false);
   };
 
@@ -203,7 +281,7 @@ const AdminBlogPage = () => {
               
               <CardContent className="p-6">
                 {showPreview ? (
-                  // MODE APERÇU (Styles optimisés pour ReactQuill)
+                  // MODE APERÇU 
                   <div className="bg-white p-6 md:p-10 rounded-xl border border-dashed border-slate-300 min-h-[400px]">
                     <div className="mb-8 text-center">
                       <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 mb-4">{newArticle.category}</Badge>
@@ -213,14 +291,17 @@ const AdminBlogPage = () => {
                     
                     {newArticle.image && (
                       <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-10 shadow-lg">
-                        {/* Application de getImageUrl ici */}
                         <img src={getImageUrl(newArticle.image)} alt="Couverture" className="w-full h-full object-cover" />
                       </div>
                     )}
                     
-                    {/* Le conteneur "prose" de Tailwind est indispensable pour que le HTML de ReactQuill soit joli */}
                     <div 
-                      className="prose prose-lg max-w-none prose-headings:text-[#0A2A5C] prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-xl"
+                      className="prose prose-lg prose-slate mx-auto max-w-3xl
+                      [overflow-wrap:anywhere] [hyphens:none]
+                      prose-headings:font-display prose-headings:text-[#0A2A5C] prose-headings:font-bold
+                      prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg prose-p:text-justify
+                      prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
+                      prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto"
                       dangerouslySetInnerHTML={{ __html: newArticle.content || "<p class='text-slate-400 text-center italic'>Commencez à rédiger pour voir l'aperçu du contenu...</p>" }} 
                     />
                   </div>
@@ -268,7 +349,6 @@ const AdminBlogPage = () => {
                       <div className="flex flex-col sm:flex-row gap-6 items-start p-5 bg-slate-50 rounded-xl border border-slate-100">
                         {newArticle.image ? (
                           <div className="relative h-32 w-48 rounded-lg overflow-hidden border shadow-sm group shrink-0">
-                            {/* Application de getImageUrl ici */}
                             <img src={getImageUrl(newArticle.image)} className="h-full w-full object-cover" alt="Preview"/>
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Button size="sm" variant="destructive" onClick={() => setNewArticle({...newArticle, image: ""})} className="h-8 text-xs font-bold">Retirer</Button>
@@ -309,18 +389,12 @@ const AdminBlogPage = () => {
                       />
                     </div>
 
-                    {/* Éditeur de texte riche */}
+                    {/* TIPTAP EDITOR */}
                     <div className="space-y-3 pt-2">
                       <Label className="text-xs text-slate-500 uppercase font-bold">Contenu principal de l'article</Label>
-                      <div className="bg-white rounded-xl overflow-hidden border shadow-sm focus-within:ring-2 focus-within:ring-[#0A2A5C] focus-within:border-transparent transition-all">
-                        <ReactQuill 
-                          theme="snow" 
-                          value={newArticle.content} 
-                          onChange={(val) => setNewArticle({...newArticle, content: val})} 
-                          modules={quillModules} 
-                          className="min-h-[300px] border-0 pb-12" 
-                          placeholder="Commencez à rédiger votre chef-d'œuvre ici..."
-                        />
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#0A2A5C] transition-all">
+                        <MenuBar editor={editor} />
+                        <EditorContent editor={editor} />
                       </div>
                     </div>
 
