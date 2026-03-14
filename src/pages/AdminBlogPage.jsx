@@ -6,12 +6,17 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import LinkExtension from '@tiptap/extension-link';
 import ImageExtension from '@tiptap/extension-image';
+import UnderlineExtension from '@tiptap/extension-underline';
+import TextAlignExtension from '@tiptap/extension-text-align';
+import YoutubeExtension from '@tiptap/extension-youtube';
 
 import { 
   FileText, ArrowLeft, Trash2, Pencil, 
   Loader2, Plus, Star, Image as ImageIcon,
   Calendar, Folder, CheckCircle,
-  Bold, Italic, List, ListOrdered, Undo, Redo, Heading1, Heading2, Link as LinkIcon 
+  Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, 
+  Undo, Redo, Heading1, Heading2, Link as LinkIcon, 
+  Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify, Video
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,57 +31,102 @@ import { useContent } from "@/context/ContentContext";
 import { toast } from "sonner";
 import api from "../api/axios";
 
-// --- SOUS-COMPOSANT : BARRE D'OUTILS TIPTAP ---
+// --- SOUS-COMPOSANT : BARRE D'OUTILS TIPTAP (AMÉLIORÉE) ---
 const MenuBar = ({ editor }) => {
   if (!editor) return null;
 
   const addLink = () => {
-    const url = window.prompt('URL du lien :');
+    const url = window.prompt('URL du lien (ex: https://...) :');
     if (url) editor.chain().focus().setLink({ href: url }).run();
+  };
+
+  const addImage = () => {
+    const url = window.prompt('URL de l\'image :');
+    if (url) editor.chain().focus().setImage({ src: url }).run();
+  };
+
+  const addYoutubeVideo = () => {
+    const url = window.prompt('URL de la vidéo YouTube :');
+    if (url) {
+      editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    }
   };
 
   return (
     <div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50 rounded-t-xl">
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''}>
+      {/* Titres */}
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''} title="Titre 1">
         <Heading1 className="h-4 w-4" />
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={editor.isActive('heading', { level: 3 }) ? 'bg-slate-200' : ''}>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className={editor.isActive('heading', { level: 3 }) ? 'bg-slate-200' : ''} title="Titre 2">
         <Heading2 className="h-4 w-4" />
       </Button>
       
       <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
       
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'bg-slate-200' : ''}>
+      {/* Style de texte */}
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'bg-slate-200' : ''} title="Gras">
         <Bold className="h-4 w-4" />
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'bg-slate-200' : ''}>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'bg-slate-200' : ''} title="Italique">
         <Italic className="h-4 w-4" />
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'bg-slate-200' : ''}>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={editor.isActive('underline') ? 'bg-slate-200' : ''} title="Souligné">
+        <UnderlineIcon className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive('strike') ? 'bg-slate-200' : ''} title="Barré">
         <span className="line-through font-bold">S</span>
+      </Button>
+
+      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+
+      {/* Alignements */}
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200' : ''} title="Aligner à gauche">
+        <AlignLeft className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().setTextAlign('center').run()} className={editor.isActive({ textAlign: 'center' }) ? 'bg-slate-200' : ''} title="Centrer">
+        <AlignCenter className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().setTextAlign('right').run()} className={editor.isActive({ textAlign: 'right' }) ? 'bg-slate-200' : ''} title="Aligner à droite">
+        <AlignRight className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={editor.isActive({ textAlign: 'justify' }) ? 'bg-slate-200' : ''} title="Justifier">
+        <AlignJustify className="h-4 w-4" />
       </Button>
       
       <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
       
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'bg-slate-200' : ''}>
+      {/* Listes & Citation */}
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'bg-slate-200' : ''} title="Liste à puces">
         <List className="h-4 w-4" />
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'bg-slate-200' : ''}>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'bg-slate-200' : ''} title="Liste numérotée">
         <ListOrdered className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()} className={editor.isActive('blockquote') ? 'bg-slate-200' : ''} title="Citation">
+        <Quote className="h-4 w-4" />
       </Button>
       
       <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
 
-      <Button size="sm" variant="ghost" type="button" onClick={addLink} className={editor.isActive('link') ? 'bg-slate-200' : ''}>
+      {/* Médias */}
+      <Button size="sm" variant="ghost" type="button" onClick={addLink} className={editor.isActive('link') ? 'bg-slate-200' : ''} title="Ajouter un lien">
         <LinkIcon className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={addImage} title="Ajouter une image (URL)">
+        <ImageIcon className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" type="button" onClick={addYoutubeVideo} title="Ajouter une vidéo YouTube">
+        <Video className="h-4 w-4" />
       </Button>
 
       <div className="flex-1" />
 
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().undo().run()}>
+      {/* Historique */}
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().undo().run()} title="Annuler">
         <Undo className="h-4 w-4" />
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().redo().run()}>
+      <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().redo().run()} title="Rétablir">
         <Redo className="h-4 w-4" />
       </Button>
     </div>
@@ -105,12 +155,22 @@ const AdminBlogPage = () => {
   };
   const [newArticle, setNewArticle] = useState(defaultArticle);
 
-  // --- INITIALISATION TIPTAP ---
+  // --- INITIALISATION TIPTAP AVEC TOUTES LES EXTENSIONS ---
   const editor = useEditor({
     extensions: [
       StarterKit,
       LinkExtension.configure({ openOnClick: false }),
-      ImageExtension,
+      ImageExtension.configure({ inline: true, allowBase64: true }),
+      UnderlineExtension,
+      TextAlignExtension.configure({ types: ['heading', 'paragraph'] }),
+      YoutubeExtension.configure({ 
+        inline: false,
+        width: 840,
+        height: 472.5,
+        HTMLAttributes: {
+          class: 'w-full aspect-video rounded-xl shadow-md my-6', // Style Tailwind pour que la vidéo soit parfaite sur mobile et PC
+        },
+      }),
     ],
     content: newArticle.content,
     onUpdate: ({ editor }) => {
@@ -118,8 +178,8 @@ const AdminBlogPage = () => {
     },
     editorProps: {
       attributes: {
-        // Ces classes Tailwind définissent l'apparence à l'intérieur de l'éditeur
-        class: 'prose prose-slate max-w-none focus:outline-none min-h-[300px] p-6 text-slate-700 bg-white rounded-b-xl',
+        // Classes Tailwind pour l'intérieur de l'éditeur
+        class: 'prose prose-slate max-w-none focus:outline-none min-h-[400px] p-6 text-slate-700 bg-white rounded-b-xl',
       },
     },
   });
@@ -170,7 +230,13 @@ const AdminBlogPage = () => {
       return toast.error("Le titre et le contenu sont obligatoires.");
     }
     
-    const finalArticle = { ...newArticle, featured: Boolean(newArticle.featured) };
+    const finalArticle = { 
+      ...newArticle, 
+      featured: Boolean(newArticle.featured),
+      author: user?.name || "Admin CALSED",
+      user: user?._id || user?.id
+    };
+
     if (!finalArticle.excerpt) {
       finalArticle.excerpt = cleanContent.substring(0, 100) + '...';
     }
@@ -193,7 +259,7 @@ const AdminBlogPage = () => {
       // Reset
       setEditingPostId(null);
       setNewArticle(defaultArticle);
-      if (editor) editor.commands.setContent(""); // On vide Tiptap
+      if (editor) editor.commands.setContent(""); 
       setShowPreview(false);
       
     } catch (error) {
@@ -301,7 +367,8 @@ const AdminBlogPage = () => {
                       prose-headings:font-display prose-headings:text-[#0A2A5C] prose-headings:font-bold
                       prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg prose-p:text-justify
                       prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
-                      prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto"
+                      prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
+                      prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
                       dangerouslySetInnerHTML={{ __html: newArticle.content || "<p class='text-slate-400 text-center italic'>Commencez à rédiger pour voir l'aperçu du contenu...</p>" }} 
                     />
                   </div>
@@ -392,9 +459,9 @@ const AdminBlogPage = () => {
                     {/* TIPTAP EDITOR */}
                     <div className="space-y-3 pt-2">
                       <Label className="text-xs text-slate-500 uppercase font-bold">Contenu principal de l'article</Label>
-                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#0A2A5C] transition-all">
+                      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#0A2A5C] transition-all flex flex-col">
                         <MenuBar editor={editor} />
-                        <EditorContent editor={editor} />
+                        <EditorContent editor={editor} className="flex-1" />
                       </div>
                     </div>
 
