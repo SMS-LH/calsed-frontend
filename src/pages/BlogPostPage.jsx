@@ -285,11 +285,12 @@ const BlogPostPage = () => {
           </div>
 
           <div className="lg:col-span-10 lg:col-start-3">
-            {/* L'encapsulation ReactQuill CORRIGÉE pour une lecture optimale */}
+           {/* L'encapsulation ReactQuill CORRIGÉE : Lecture fluide sans coupures de mots agressives */}
             <div 
-              className="prose prose-lg prose-slate mx-auto max-w-3xl break-words
+              className="prose prose-lg prose-slate mx-auto max-w-3xl
+              [overflow-wrap:anywhere] [hyphens:none]
               prose-headings:font-display prose-headings:text-[#0A2A5C] prose-headings:font-bold
-              prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg
+              prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg prose-p:text-justify
               prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
               prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
               prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
