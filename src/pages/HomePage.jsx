@@ -60,17 +60,18 @@ const HomePage = () => {
     .filter(post => post.featured === true || post.featured === "true")
     .slice(0, 3);
 
+  // --- CORRECTION : Spécifique pour Create React App (.env avec REACT_APP_) ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
 
-    // Si l'image vient de Cloudinary, on l'affiche telle quelle !
-    if (imagePath.startsWith('http')) {
+    // Si l'image vient de Cloudinary (ou base64), on l'affiche telle quelle !
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
       return imagePath;
     }
 
-    // Fallback dynamique pour les anciennes images (au cas où)
-    const baseUrl = import.meta.env.VITE_API_URL 
-      ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') 
+    // Fallback sécurisé pour les anciennes images locales avec process.env
+    const baseUrl = process.env.REACT_APP_API_URL 
+      ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
       : "https://calsed-api.onrender.com";
       
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;

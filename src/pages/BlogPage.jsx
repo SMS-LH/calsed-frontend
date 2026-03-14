@@ -28,16 +28,22 @@ const BlogPage = () => {
   const [visibleCount, setVisibleCount] = useState(9); 
   const POSTS_PER_LOAD = 6; 
 
-  // --- CORRECTION DÉPLOIEMENT : Gestion sécurisée des URLs d'images ---
+  // --- CORRECTION : Spécifique pour Create React App (.env avec REACT_APP_) ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    // Si c'est déjà une URL complète (ex: Cloudinary, http...), on la retourne telle quelle
-    if (imagePath.startsWith('http')) return imagePath;
     
-    // Sinon, on construit l'URL complète vers le backend
-    // On retire '/api' de REACT_APP_API_URL s'il est présent pour pointer à la racine du serveur
-    const baseUrl = (process.env.REACT_APP_API_URL || '').replace(/\/api$/, '');
-    return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+    // Si l'image vient de Cloudinary (ou base64), on l'affiche telle quelle !
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+
+    // Fallback sécurisé pour les anciennes images locales avec process.env
+    const baseUrl = process.env.REACT_APP_API_URL 
+      ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
+      : "https://calsed-api.onrender.com";
+      
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${cleanPath}`;
   };
 
   // 1. Extraction sécurisée des catégories
@@ -160,7 +166,7 @@ const BlogPage = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
               {displayedPosts.map((post, index) => {
-                const isHero = index === 0;
+                const isHero = index === 0 && selectedCategory === "all" && !searchQuery; // Optimisation: Le style "Hero" ne s'applique que sur la vue par défaut
                 const safeImageUrl = getImageUrl(post.image);
                 
                 return (
@@ -189,9 +195,9 @@ const BlogPage = () => {
                             </div>
                           )}
                           <div className="absolute top-4 left-4">
-                             <Badge className="bg-white/90 text-slate-900 hover:bg-white backdrop-blur-md shadow-sm border-0 font-bold px-3 py-1 uppercase text-[10px] tracking-wider">
-                               {post.category || "Article"}
-                             </Badge>
+                              <Badge className="bg-white/90 text-slate-900 hover:bg-white backdrop-blur-md shadow-sm border-0 font-bold px-3 py-1 uppercase text-[10px] tracking-wider">
+                                {post.category || "Article"}
+                              </Badge>
                           </div>
                         </div>
 
@@ -200,7 +206,7 @@ const BlogPage = () => {
                           <div className="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
                             <span className="flex items-center gap-1.5">
                               <Calendar className="h-3.5 w-3.5" />
-                              {post.date ? new Date(post.date).toLocaleDateString('fr-FR') : "Récemment"}
+                              {post.date || post.createdAt ? new Date(post.date || post.createdAt).toLocaleDateString('fr-FR') : "Récemment"}
                             </span>
                             {post.readTime && (
                               <span className="flex items-center gap-1.5">

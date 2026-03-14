@@ -120,6 +120,24 @@ const AdminConfigPage = () => {
     }
   };
 
+  // --- CORRECTION : Spécifique pour Create React App (.env avec REACT_APP_) ---
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // Si c'est une image Cloudinary ou Base64, on ne touche à rien
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    
+    // Fallback sécurisé pour Create React App
+    const baseUrl = process.env.REACT_APP_API_URL 
+      ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
+      : "https://calsed-api.onrender.com";
+      
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
   if (isLoadingConfig) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-[#0A2A5C]"/></div>;
 
   return (
@@ -167,7 +185,7 @@ const AdminConfigPage = () => {
                     <p className="text-xs text-slate-500 mb-2">L'image de fond tout en haut de la page d'accueil.</p>
                     <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.heroImage ? (
-                        <img src={siteImages.heroImage} className="w-full h-full object-cover" alt="Hero"/>
+                        <img src={getImageUrl(siteImages.heroImage)} className="w-full h-full object-cover" alt="Hero"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
@@ -189,7 +207,7 @@ const AdminConfigPage = () => {
                     <p className="text-xs text-slate-500 mb-2">L'image illustrative du LSED sur la page Équipe.</p>
                     <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.schoolImage ? (
-                        <img src={siteImages.schoolImage} className="w-full h-full object-cover" alt="Lycée"/>
+                        <img src={getImageUrl(siteImages.schoolImage)} className="w-full h-full object-cover" alt="Lycée"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
@@ -209,7 +227,7 @@ const AdminConfigPage = () => {
                     <p className="text-xs text-slate-500 mb-2">Première image de la section "Une vision commune".</p>
                     <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.philImage1 ? (
-                        <img src={siteImages.philImage1} className="w-full h-full object-cover" alt="Mission 1"/>
+                        <img src={getImageUrl(siteImages.philImage1)} className="w-full h-full object-cover" alt="Mission 1"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
@@ -228,7 +246,7 @@ const AdminConfigPage = () => {
                     <p className="text-xs text-slate-500 mb-2">Deuxième image de la section "Une vision commune".</p>
                     <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.philImage2 ? (
-                        <img src={siteImages.philImage2} className="w-full h-full object-cover" alt="Mission 2"/>
+                        <img src={getImageUrl(siteImages.philImage2)} className="w-full h-full object-cover" alt="Mission 2"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
@@ -257,7 +275,7 @@ const AdminConfigPage = () => {
                 <CardContent className="p-6 space-y-4">
                   <div className="flex gap-4 items-center mb-4 bg-slate-50 p-4 rounded-xl border">
                     <Avatar className="h-16 w-16 border-2 border-white shadow-md">
-                      <AvatarImage src={newMember.image} />
+                      <AvatarImage src={getImageUrl(newMember.image)} />
                       <AvatarFallback className="bg-slate-200 text-slate-500"><ImageIcon className="h-6 w-6"/></AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
@@ -310,7 +328,7 @@ const AdminConfigPage = () => {
                       <div key={m._id || i} className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors group">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12 border shadow-sm">
-                            <AvatarImage src={m.image} />
+                            <AvatarImage src={getImageUrl(m.image)} />
                             <AvatarFallback className="bg-[#0A2A5C] text-white font-bold">{m.name ? m.name[0] : '?'}</AvatarFallback>
                           </Avatar>
                           <div>

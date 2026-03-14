@@ -22,7 +22,6 @@ import api from "../api/axios";
 const AdminBlogPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  // On récupère uniquement blogPosts et fetchBlogPosts du contexte
   const { blogPosts, fetchBlogPosts } = useContent();
 
   const [uploading, setUploading] = useState(false);
@@ -51,6 +50,24 @@ const AdminBlogPage = () => {
     ],
   };
 
+  // --- UTILITAIRE IMAGE : CORRIGÉ POUR CREATE REACT APP ---
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // Si c'est Cloudinary ou Base64, on ne touche à rien
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    
+    // On utilise process.env car tu es sur Create React App
+    const baseUrl = process.env.REACT_APP_API_URL 
+      ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
+      : "https://calsed-api.onrender.com";
+      
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
   // --- ACTIONS ---
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -67,6 +84,8 @@ const AdminBlogPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success("Image téléchargée !", { id: toastId });
+      
+      // On récupère directement l'URL Cloudinary
       const imageUrl = typeof data === 'string' ? data : data.url;
       setNewArticle(prev => ({ ...prev, image: imageUrl }));
     } catch (error) {
@@ -76,16 +95,14 @@ const AdminBlogPage = () => {
     }
   };
 
-  // --- SAUVEGARDE DIRECTE API (CORRIGÉE) ---
   const handleSaveArticle = async () => {
-    // Nettoyage pour vérifier si l'éditeur n'est pas rempli que de balises vides
+    // Nettoyage pour vérifier si l'éditeur n'est pas vide
     const cleanContent = newArticle.content.replace(/<[^>]*>?/gm, '').trim();
     
     if (!newArticle.title || !cleanContent) {
       return toast.error("Le titre et le contenu sont obligatoires.");
     }
     
-    // Préparation finale de l'objet
     const finalArticle = { ...newArticle, featured: Boolean(newArticle.featured) };
     if (!finalArticle.excerpt) {
       finalArticle.excerpt = cleanContent.substring(0, 100) + '...';
@@ -94,20 +111,16 @@ const AdminBlogPage = () => {
     const toastId = toast.loading(editingPostId ? "Mise à jour en cours..." : "Publication en cours...");
     
     try {
-      // 1. On envoie directement au serveur via Axios pour garantir la détection d'erreur
       if (editingPostId) {
         await api.put(`/posts/${editingPostId}`, finalArticle);
       } else {
         await api.post('/posts', finalArticle);
       }
 
-      // 2. Si on arrive ici, c'est que le serveur a dit OUI (Status 200/201) !
-      // On demande au contexte de rafraîchir la liste pour que l'article s'affiche.
       if (fetchBlogPosts) {
         await fetchBlogPosts();
       }
 
-      // 3. On réinitialise l'interface
       toast.success(editingPostId ? "Article mis à jour avec succès !" : "Article publié avec succès !", { id: toastId });
       setEditingPostId(null);
       setNewArticle(defaultArticle);
@@ -115,23 +128,20 @@ const AdminBlogPage = () => {
       
     } catch (error) {
       console.error("Erreur Backend :", error.response?.data || error);
-      // On affiche le VRAI message d'erreur renvoyé par le backend
-      toast.error(error.response?.data?.message || "Erreur lors de la sauvegarde côté serveur", { id: toastId });
+      toast.error(error.response?.data?.message || "Erreur lors de la sauvegarde", { id: toastId });
     }
   };
 
-  // --- SUPPRESSION DIRECTE API (CORRIGÉE) ---
   const handleDeleteArticle = async (postId, title) => {
     if (!window.confirm(`Supprimer définitivement l'article "${title}" ?`)) return;
     
     const toastId = toast.loading("Suppression en cours...");
     try {
       await api.delete(`/posts/${postId}`);
-      
       if(fetchBlogPosts) {
         await fetchBlogPosts();
       }
-      toast.success("Article supprimé de la base de données.", { id: toastId });
+      toast.success("Article supprimé.", { id: toastId });
     } catch (error) { 
       console.error("Erreur Backend Suppression :", error.response?.data || error);
       toast.error("Erreur lors de la suppression.", { id: toastId }); 
@@ -193,39 +203,46 @@ const AdminBlogPage = () => {
               
               <CardContent className="p-6">
                 {showPreview ? (
-                  // MODE APERÇU
-                  <div className="prose max-w-none bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300 min-h-[400px]">
-                    <div className="mb-6 text-center">
+                  // MODE APERÇU (Styles optimisés pour ReactQuill)
+                  <div className="bg-white p-6 md:p-10 rounded-xl border border-dashed border-slate-300 min-h-[400px]">
+                    <div className="mb-8 text-center">
                       <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 mb-4">{newArticle.category}</Badge>
-                      <h1 className="text-3xl font-bold text-[#0A2A5C] leading-tight mb-4">{newArticle.title || "Titre de votre article"}</h1>
-                      {newArticle.excerpt && <p className="text-xl text-slate-500 italic font-serif">"{newArticle.excerpt}"</p>}
+                      <h1 className="text-3xl md:text-4xl font-black text-[#0A2A5C] leading-tight mb-4">{newArticle.title || "Titre de votre article"}</h1>
+                      {newArticle.excerpt && <p className="text-xl text-slate-500 italic font-serif max-w-2xl mx-auto">"{newArticle.excerpt}"</p>}
                     </div>
+                    
                     {newArticle.image && (
-                      <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-8 shadow-md">
-                        <img src={newArticle.image} alt="Couverture" className="w-full h-full object-cover" />
+                      <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-10 shadow-lg">
+                        {/* Application de getImageUrl ici */}
+                        <img src={getImageUrl(newArticle.image)} alt="Couverture" className="w-full h-full object-cover" />
                       </div>
                     )}
-                    <div dangerouslySetInnerHTML={{ __html: newArticle.content || "<p class='text-slate-400 text-center'>Commencez à rédiger pour voir l'aperçu du contenu...</p>" }} />
+                    
+                    {/* Le conteneur "prose" de Tailwind est indispensable pour que le HTML de ReactQuill soit joli */}
+                    <div 
+                      className="prose prose-lg max-w-none prose-headings:text-[#0A2A5C] prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-xl"
+                      dangerouslySetInnerHTML={{ __html: newArticle.content || "<p class='text-slate-400 text-center italic'>Commencez à rédiger pour voir l'aperçu du contenu...</p>" }} 
+                    />
                   </div>
                 ) : (
                   // MODE ÉDITION
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     {/* Titre */}
                     <div>
                       <Input 
                         placeholder="Titre accrocheur..." 
                         value={newArticle.title} 
                         onChange={(e) => setNewArticle({...newArticle, title: e.target.value})} 
-                        className="text-2xl font-bold h-14 border-0 border-b-2 rounded-none focus-visible:ring-0 focus-visible:border-[#0A2A5C] px-0 bg-transparent" 
+                        className="text-2xl font-bold h-14 border-0 border-b-2 border-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-[#0A2A5C] px-0 bg-transparent" 
                       />
                     </div>
 
                     {/* Catégorie & Mise en avant */}
-                    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-slate-50 rounded-xl border">
-                      <div className="flex-1 space-y-2">
-                        <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><Folder className="h-3 w-3"/> Rubrique</Label>
+                    <div className="grid sm:grid-cols-2 gap-6 p-5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="space-y-3">
+                        <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><Folder className="h-4 w-4"/> Rubrique</Label>
                         <Select value={newArticle.category} onValueChange={(val) => setNewArticle({...newArticle, category: val})}>
-                          <SelectTrigger className="bg-white">
+                          <SelectTrigger className="bg-white border-slate-200 shadow-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -236,10 +253,10 @@ const AdminBlogPage = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><Star className="h-3 w-3"/> Visibilité</Label>
-                        <div className="flex items-center justify-between border px-4 h-10 rounded-md bg-white">
-                          <span className="text-sm font-medium">Mettre à la une</span>
+                      <div className="space-y-3">
+                        <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><Star className="h-4 w-4"/> Visibilité</Label>
+                        <div className="flex items-center justify-between border border-slate-200 px-4 h-10 rounded-md bg-white shadow-sm">
+                          <span className="text-sm font-medium text-slate-700">Mettre à la une</span>
                           <Switch checked={newArticle.featured} onCheckedChange={(val) => setNewArticle({...newArticle, featured: val})} />
                         </div>
                       </div>
@@ -247,31 +264,39 @@ const AdminBlogPage = () => {
 
                     {/* Image de couverture */}
                     <div className="space-y-3">
-                      <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><ImageIcon className="h-3 w-3"/> Image de couverture</Label>
-                      <div className="flex flex-col sm:flex-row gap-4 items-start">
+                      <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><ImageIcon className="h-4 w-4"/> Image de couverture</Label>
+                      <div className="flex flex-col sm:flex-row gap-6 items-start p-5 bg-slate-50 rounded-xl border border-slate-100">
                         {newArticle.image ? (
-                          <div className="relative h-24 w-32 rounded-lg overflow-hidden border shadow-sm group">
-                            <img src={newArticle.image} className="h-full w-full object-cover" alt="Preview"/>
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Button size="sm" variant="destructive" onClick={() => setNewArticle({...newArticle, image: ""})} className="h-6 text-[10px]">Retirer</Button>
+                          <div className="relative h-32 w-48 rounded-lg overflow-hidden border shadow-sm group shrink-0">
+                            {/* Application de getImageUrl ici */}
+                            <img src={getImageUrl(newArticle.image)} className="h-full w-full object-cover" alt="Preview"/>
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Button size="sm" variant="destructive" onClick={() => setNewArticle({...newArticle, image: ""})} className="h-8 text-xs font-bold">Retirer</Button>
                             </div>
                           </div>
                         ) : (
-                          <div className="h-24 w-32 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50">
-                            <ImageIcon className="h-8 w-8 text-slate-300"/>
+                          <div className="h-32 w-48 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center bg-white shrink-0">
+                            <ImageIcon className="h-8 w-8 text-slate-300 mb-2"/>
+                            <span className="text-[10px] text-slate-400 uppercase font-bold">Aucune image</span>
                           </div>
                         )}
                         
-                        <div className="flex-1 space-y-2 w-full">
-                          <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} className="cursor-pointer"/>
-                          <p className="text-xs text-slate-400 text-center">- OU -</p>
-                          <Input placeholder="Coller une URL d'image existante..." value={newArticle.image} onChange={(e) => setNewArticle({...newArticle, image: e.target.value})} className="text-xs" />
+                        <div className="flex-1 space-y-4 w-full">
+                          <div>
+                            <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} className="cursor-pointer bg-white"/>
+                            <p className="text-[11px] text-slate-500 mt-2">Format recommandé : JPG ou PNG. Max 5MB.</p>
+                          </div>
+                          <div className="relative">
+                            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
+                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-slate-50 px-2 text-slate-400 font-bold">OU</span></div>
+                          </div>
+                          <Input placeholder="Coller une URL d'image externe..." value={newArticle.image} onChange={(e) => setNewArticle({...newArticle, image: e.target.value})} className="bg-white" />
                         </div>
                       </div>
                     </div>
 
                     {/* Extrait */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label className="text-xs text-slate-500 uppercase font-bold flex justify-between">
                         <span>Extrait (Résumé affiché sur l'accueil)</span>
                         <span className="text-slate-400 font-normal">Optionnel</span>
@@ -280,20 +305,21 @@ const AdminBlogPage = () => {
                         placeholder="Une phrase courte pour donner envie de lire..." 
                         value={newArticle.excerpt} 
                         onChange={(e) => setNewArticle({...newArticle, excerpt: e.target.value})} 
+                        className="bg-slate-50 border-slate-200"
                       />
                     </div>
 
                     {/* Éditeur de texte riche */}
-                    <div className="space-y-2 pt-2">
-                      <Label className="text-xs text-slate-500 uppercase font-bold">Contenu principal</Label>
-                      <div className="bg-white rounded-md overflow-hidden border focus-within:ring-2 focus-within:ring-[#0A2A5C] focus-within:border-transparent transition-all">
+                    <div className="space-y-3 pt-2">
+                      <Label className="text-xs text-slate-500 uppercase font-bold">Contenu principal de l'article</Label>
+                      <div className="bg-white rounded-xl overflow-hidden border shadow-sm focus-within:ring-2 focus-within:ring-[#0A2A5C] focus-within:border-transparent transition-all">
                         <ReactQuill 
                           theme="snow" 
                           value={newArticle.content} 
                           onChange={(val) => setNewArticle({...newArticle, content: val})} 
                           modules={quillModules} 
-                          className="h-[400px] border-0 pb-10" 
-                          placeholder="Écrivez votre article ici..."
+                          className="min-h-[300px] border-0 pb-12" 
+                          placeholder="Commencez à rédiger votre chef-d'œuvre ici..."
                         />
                       </div>
                     </div>
@@ -302,13 +328,13 @@ const AdminBlogPage = () => {
                 )}
               </CardContent>
 
-              <CardFooter className="p-6 bg-slate-50 border-t flex gap-3 justify-end">
+              <CardFooter className="p-6 bg-slate-50 border-t flex gap-4 justify-end">
                 {editingPostId && (
-                  <Button variant="outline" onClick={handleCancelEdit} className="border-slate-300 text-slate-600">
+                  <Button variant="outline" onClick={handleCancelEdit} className="border-slate-300 text-slate-600 bg-white">
                     Annuler les modifications
                   </Button>
                 )}
-                <Button onClick={handleSaveArticle} disabled={uploading || !newArticle.title} className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[150px]">
+                <Button onClick={handleSaveArticle} disabled={uploading || !newArticle.title} className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[150px] shadow-md">
                   {uploading ? <Loader2 className="animate-spin h-4 w-4 mr-2"/> : <CheckCircle className="h-4 w-4 mr-2"/>}
                   {editingPostId ? "Enregistrer" : "Publier l'article"}
                 </Button>
@@ -319,46 +345,47 @@ const AdminBlogPage = () => {
           {/* COLONNE DROITE : LISTE DES ARTICLES */}
           <div className="lg:col-span-1">
             <Card className="border-0 shadow-sm bg-white sticky top-24">
-              <CardHeader className="border-b bg-slate-50/50">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-[#0A2A5C]" /> 
+              <CardHeader className="border-b bg-[#0A2A5C] text-white rounded-t-xl">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5" /> 
                   Articles publiés ({blogPosts.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
                   {blogPosts.map(post => (
-                    <div key={post.id || post._id} className="p-4 hover:bg-slate-50 transition-colors group">
-                      <div className="flex justify-between items-start mb-2">
-                        <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-wider ${post.featured ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500'}`}>
-                          {post.featured && <Star className="h-2.5 w-2.5 mr-1 fill-amber-700" />}
+                    <div key={post.id || post._id} className="p-5 hover:bg-slate-50 transition-colors group">
+                      <div className="flex justify-between items-start mb-3">
+                        <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-wider ${post.featured ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-slate-100 text-slate-600'}`}>
+                          {post.featured && <Star className="h-3 w-3 mr-1.5 fill-amber-500 text-amber-500" />}
                           {post.category || "Article"}
                         </Badge>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600 hover:bg-blue-50" onClick={() => handleEditClick(post)} title="Modifier">
-                            <Pencil className="h-3.5 w-3.5"/>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-100" onClick={() => handleEditClick(post)} title="Modifier">
+                            <Pencil className="h-4 w-4"/>
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:bg-red-50" onClick={() => handleDeleteArticle(post.id || post._id, post.title)} title="Supprimer">
-                            <Trash2 className="h-3.5 w-3.5"/>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:bg-red-100" onClick={() => handleDeleteArticle(post.id || post._id, post.title)} title="Supprimer">
+                            <Trash2 className="h-4 w-4"/>
                           </Button>
                         </div>
                       </div>
                       
-                      <p className="font-bold text-[#0A2A5C] text-sm line-clamp-2 leading-tight mb-1 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={() => handleEditClick(post)}>
+                      <p className="font-bold text-[#0A2A5C] text-base line-clamp-2 leading-snug mb-2 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={() => handleEditClick(post)}>
                         {post.title}
                       </p>
                       
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> 
+                      <p className="text-[11px] text-slate-500 flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-3.5 w-3.5 text-slate-400" /> 
                         {new Date(post.date || post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                   ))}
 
                   {blogPosts.length === 0 && (
-                    <div className="p-8 text-center text-slate-400">
-                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Aucun article publié.</p>
+                    <div className="p-10 text-center text-slate-400">
+                      <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm font-medium">Aucun article publié.</p>
+                      <p className="text-xs mt-1">Vos articles apparaîtront ici.</p>
                     </div>
                   )}
                 </div>

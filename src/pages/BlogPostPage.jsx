@@ -31,14 +31,22 @@ const BlogPostPage = () => {
   const post = blogPosts.find(p => (p._id || p.id).toString() === id);
   const [likes, setLikes] = useState([]);
 
-  // --- CORRECTION DÉPLOIEMENT : Gestion sécurisée des URLs d'images ---
+  // --- CORRECTION : Spécifique pour Create React App (.env avec REACT_APP_) ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
     
-    // On récupère la base URL dynamiquement (Compatible CRA et Vite)
-    const baseUrl = (process.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
-    return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+    // Si c'est une image Cloudinary ou Base64, on ne touche à rien
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+    
+    // Fallback sécurisé pour Create React App
+    const baseUrl = process.env.REACT_APP_API_URL 
+      ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
+      : "https://calsed-api.onrender.com";
+      
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${cleanPath}`;
   };
 
   // --- LOGIQUE VISITEUR ---
@@ -100,7 +108,7 @@ const BlogPostPage = () => {
     setLikes(newLikes);
 
     try {
-      // CORRECTION : Passage de .patch à .put pour correspondre au Backend
+      // API call
       await api.put(`/posts/${id}/like`, { userId: currentUserId });
       
       refreshContent();
