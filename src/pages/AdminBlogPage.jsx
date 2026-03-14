@@ -11,6 +11,7 @@ import TextAlignExtension from '@tiptap/extension-text-align';
 import YoutubeExtension from '@tiptap/extension-youtube';
 import { Node, mergeAttributes } from '@tiptap/core'; // Pour la vidéo locale
 
+// --- IMPORTS ICONS & UI ---
 import { 
   FileText, ArrowLeft, Trash2, Pencil, 
   Loader2, Plus, Star, Image as ImageIcon,
@@ -31,6 +32,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useContent } from "@/context/ContentContext";
 import { toast } from "sonner";
 import api from "../api/axios";
+
+// IMPORT DU COMPOSANT DE RECADRAGE
+import ImageCropModal from "@/components/ImageCropModal";
 
 // --- EXTENSION TIPTAP SUR MESURE : VIDÉO LOCALE ---
 const CustomVideo = Node.create({
@@ -70,7 +74,6 @@ const MenuBar = ({ editor }) => {
     if (!file) return;
 
     const formData = new FormData();
-    // Ton backend attend le champ "image" (même pour une vidéo, c'est le nom de ton champ Multer)
     formData.append('image', file); 
 
     const toastId = toast.loading(`Téléchargement de ${type === 'image' ? "l'image" : "la vidéo"} vers le serveur...`);
@@ -211,6 +214,9 @@ const AdminBlogPage = () => {
   const [editingPostId, setEditingPostId] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
 
+  // --- NOUVEAUX ÉTATS POUR LE RECADRAGE ---
+  const [cropModalSrc, setCropModalSrc] = useState(null);
+
   // État initial de l'article
   const defaultArticle = { 
     title: "", 
@@ -264,31 +270,46 @@ const AdminBlogPage = () => {
     return `${baseUrl}${cleanPath}`;
   };
 
-  // --- ACTIONS ---
-  const handleFileUpload = async (e) => {
+  // --- ACTIONS IMAGES (AVEC RECADRAGE) ---
+  
+  // Ouvre l'image sélectionnée dans la modale
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setCropModalSrc(reader.result);
+    });
+    reader.readAsDataURL(file);
+    e.target.value = ""; // On vide l'input pour pouvoir sélectionner la même image ensuite
+  };
+
+  // Upload l'image APRES recadrage
+  const handleCroppedUpload = async (croppedFile) => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', croppedFile);
 
     setUploading(true);
-    const toastId = toast.loading("Téléchargement de l'image de couverture...");
+    const toastId = toast.loading("Envoi de l'image de couverture...");
 
     try {
       const { data } = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      toast.success("Image téléchargée !", { id: toastId });
+      toast.success("Image parfaite !", { id: toastId });
       
       const imageUrl = typeof data === 'string' ? data : data.url;
       setNewArticle(prev => ({ ...prev, image: imageUrl }));
+      
+      setCropModalSrc(null); // On ferme la modale
     } catch (error) {
-      toast.error("Erreur de téléchargement", { id: toastId });
+      toast.error("Erreur lors de l'envoi", { id: toastId });
     } finally {
       setUploading(false);
     }
   };
+
 
   const handleSaveArticle = async () => {
     const cleanContent = newArticle.content.replace(/<[^>]*>?/gm, '').trim();
@@ -379,7 +400,7 @@ const AdminBlogPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-slate-50/50">
+    <div className="min-h-screen pt-24 pb-20 bg-slate-50/50 relative">
       <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
         
         {/* EN-TÊTE ET NAVIGATION */}
@@ -477,7 +498,7 @@ const AdminBlogPage = () => {
                       </div>
                     </div>
 
-                    {/* Image de couverture */}
+                    {/* Image de couverture - MODIFIÉ POUR LE RECADRAGE */}
                     <div className="space-y-3">
                       <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><ImageIcon className="h-4 w-4"/> Image de couverture</Label>
                       <div className="flex flex-col sm:flex-row gap-6 items-start p-5 bg-slate-50 rounded-xl border border-slate-100">
@@ -497,8 +518,8 @@ const AdminBlogPage = () => {
                         
                         <div className="flex-1 space-y-4 w-full">
                           <div>
-                            <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} className="cursor-pointer bg-white"/>
-                            <p className="text-[11px] text-slate-500 mt-2">Format recommandé : JPG ou PNG. Max 5MB.</p>
+                            <Input type="file" accept="image/*" onChange={handleFileSelect} disabled={uploading} className="cursor-pointer bg-white"/>
+                            <p className="text-[11px] text-slate-500 mt-2">L'image sera automatiquement recadrée au format 16:9.</p>
                           </div>
                           <div className="relative">
                             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
@@ -603,6 +624,18 @@ const AdminBlogPage = () => {
 
         </div>
       </div>
+
+      {/* MODALE DE RECADRAGE */}
+      {cropModalSrc && (
+        <ImageCropModal
+          imageSrc={cropModalSrc}
+          aspect={16 / 9}
+          isUploading={uploading}
+          onClose={() => setCropModalSrc(null)}
+          onComplete={handleCroppedUpload}
+        />
+      )}
+
     </div>
   );
 };

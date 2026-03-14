@@ -16,12 +16,19 @@ import { useContent } from "@/context/ContentContext";
 import { toast } from "sonner";
 import api from "../api/axios";
 
+// IMPORT DU COMPOSANT DE RECADRAGE
+import ImageCropModal from "@/components/ImageCropModal";
+
 const AdminConfigPage = () => {
   const navigate = useNavigate();
   const { teamMembers, addTeamMember, removeTeamMember } = useContent();
 
   const [uploading, setUploading] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+
+  // --- NOUVEAUX ÉTATS POUR LE RECADRAGE ---
+  const [cropModalSrc, setCropModalSrc] = useState(null);
+  const [cropConfig, setCropConfig] = useState({ aspect: 1, type: '', target: '' }); // Stocke le ratio et la cible
 
   // --- ÉTATS BUREAU ---
   const [newMember, setNewMember] = useState({ 
@@ -48,8 +55,6 @@ const AdminConfigPage = () => {
   const fetchSiteImages = async () => {
     try {
       const { data } = await api.get('/settings');
-      
-      // Sécurité : si data est null (première initialisation), on garde les valeurs par défaut
       if (data) {
         setSiteImages({
           heroImage: data.heroImage || "",
@@ -75,36 +80,47 @@ const AdminConfigPage = () => {
     }
   };
 
-  const handleFileUpload = async (e, type = 'config', fieldName = null) => {
+  // --- LOGIQUE DE RECADRAGE ---
+  
+  // 1. Ouvre l'image avec le bon format (aspect)
+  const handleFileSelect = (e, type, target, aspect) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setCropModalSrc(reader.result);
+      setCropConfig({ aspect, type, target });
+    });
+    reader.readAsDataURL(file);
+    e.target.value = ""; 
+  };
+
+  // 2. Upload l'image recadrée au bon endroit
+  const handleCroppedUpload = async (croppedFile) => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', croppedFile);
 
     setUploading(true);
-    const toastId = toast.loading("Téléchargement vers Cloudinary...");
+    const toastId = toast.loading("Envoi de l'image...");
 
     try {
       const { data } = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
-      // data contient directement l'URL Cloudinary renvoyée par le backend
+      
       const imageUrl = typeof data === 'string' ? data : data.url;
       
-      if (!imageUrl) throw new Error("URL d'image non reçue");
-
-      toast.success("Image sauvegardée dans le cloud !", { id: toastId });
-      
-      if (type === 'config' && fieldName) {
-        setSiteImages(prev => ({ ...prev, [fieldName]: imageUrl }));
-      } else if (type === 'member') {
-        setNewMember(prev => ({ ...prev, image: imageUrl }));
+      if (cropConfig.type === 'config') {
+        setSiteImages(prev => ({ ...prev, [cropConfig.target]: imageUrl }));
+      } else if (cropConfig.type === 'member') {
+        setNewMember(prev => ({ ...prev, [cropConfig.target]: imageUrl }));
       }
+
+      toast.success("Image recadrée et sauvegardée !", { id: toastId });
+      setCropModalSrc(null); // On ferme la modale
     } catch (error) {
-      console.error("Erreur upload:", error);
-      toast.error("Erreur lors de l'envoi au cloud", { id: toastId });
+      toast.error("Erreur lors de l'envoi", { id: toastId });
     } finally {
       setUploading(false);
     }
@@ -113,27 +129,18 @@ const AdminConfigPage = () => {
   const handleAddMember = async () => {
     if (!newMember.name || !newMember.role) return toast.error("Nom et Rôle requis");
     
-    // addTeamMember doit maintenant retourner une promesse dans le ContentContext
     const success = await addTeamMember(newMember);
     if (success) {
       setNewMember({ name: "", role: "", generation: "", image: "", linkedin: "", email: "" });
     }
   };
 
-  // --- CORRECTION : Spécifique pour Create React App (.env avec REACT_APP_) ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    
-    // Si c'est une image Cloudinary ou Base64, on ne touche à rien
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
-      return imagePath;
-    }
-    
-    // Fallback sécurisé pour Create React App
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
     const baseUrl = process.env.REACT_APP_API_URL 
       ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
       : "https://calsed-api.onrender.com";
-      
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
     return `${baseUrl}${cleanPath}`;
   };
@@ -141,10 +148,9 @@ const AdminConfigPage = () => {
   if (isLoadingConfig) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-[#0A2A5C]"/></div>;
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-slate-50/50">
+    <div className="min-h-screen pt-24 pb-20 bg-slate-50/50 relative">
       <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
         
-        {/* EN-TÊTE ET NAVIGATION */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-4 text-slate-500 hover:text-[#0A2A5C]">
@@ -168,7 +174,7 @@ const AdminConfigPage = () => {
               <CardHeader className="bg-slate-100/50 border-b flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-[#0A2A5C] text-xl">Images institutionnelles</CardTitle>
-                  <CardDescription>Gérez les photos principales affichées sur les pages publiques (Accueil et Équipe).</CardDescription>
+                  <CardDescription>Gérez les photos principales affichées sur les pages publiques.</CardDescription>
                 </div>
                 <Button onClick={handleSaveImages} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
                   <Save className="h-4 w-4 mr-2" /> Enregistrer les images
@@ -177,83 +183,77 @@ const AdminConfigPage = () => {
               <CardContent className="p-8">
                 <div className="grid md:grid-cols-2 gap-10">
                   
-                  {/* Image Accueil - Hero */}
+                  {/* Image Accueil - Hero (Format panoramique 16:9 ou 21:9) */}
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
                       <LayoutTemplate className="h-4 w-4 text-[#0A2A5C]" /> Accueil : Bannière Principale
                     </Label>
-                    <p className="text-xs text-slate-500 mb-2">L'image de fond tout en haut de la page d'accueil.</p>
+                    <p className="text-xs text-slate-500 mb-2">Idéalement un format très large (16:9).</p>
                     <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.heroImage ? (
                         <img src={getImageUrl(siteImages.heroImage)} className="w-full h-full object-cover" alt="Hero"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
-                          <span className="text-xs">Aucune image</span>
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'heroImage')} disabled={uploading}/>
-                        <Button variant="secondary" className="pointer-events-none">Modifier l'image</Button>
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileSelect(e, 'config', 'heroImage', 16/9)} disabled={uploading}/>
+                        <Button variant="secondary" className="pointer-events-none">Modifier</Button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Image Lycée - Équipe */}
+                  {/* Image Lycée (Format classique 4:3) */}
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
                       <School className="h-4 w-4 text-[#0A2A5C]" /> Équipe : Photo du Lycée
                     </Label>
-                    <p className="text-xs text-slate-500 mb-2">L'image illustrative du LSED sur la page Équipe.</p>
+                    <p className="text-xs text-slate-500 mb-2">Image illustrative du LSED (Format 4:3).</p>
                     <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.schoolImage ? (
                         <img src={getImageUrl(siteImages.schoolImage)} className="w-full h-full object-cover" alt="Lycée"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
-                          <span className="text-xs">Aucune image</span>
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'schoolImage')} disabled={uploading}/>
-                        <Button variant="secondary" className="pointer-events-none">Modifier l'image</Button>
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileSelect(e, 'config', 'schoolImage', 4/3)} disabled={uploading}/>
+                        <Button variant="secondary" className="pointer-events-none">Modifier</Button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Image Mission 1 */}
+                  {/* Image Mission 1 (Format vertical 3:4) */}
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Mission 1 (Verticale)</Label>
-                    <p className="text-xs text-slate-500 mb-2">Première image de la section "Une vision commune".</p>
+                    <p className="text-xs text-slate-500 mb-2">Format vertical (3:4).</p>
                     <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.philImage1 ? (
                         <img src={getImageUrl(siteImages.philImage1)} className="w-full h-full object-cover" alt="Mission 1"/>
                       ) : (
-                        <div className="flex flex-col h-full items-center justify-center text-slate-400">
-                          <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
-                        </div>
+                        <div className="flex flex-col h-full items-center justify-center text-slate-400"><ImageIcon className="h-8 w-8 mb-2 opacity-50"/></div>
                       )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'philImage1')} disabled={uploading}/>
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileSelect(e, 'config', 'philImage1', 3/4)} disabled={uploading}/>
                         <Button size="sm" variant="secondary" className="pointer-events-none text-xs">Modifier</Button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Image Mission 2 */}
+                  {/* Image Mission 2 (Format vertical 3:4) */}
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Mission 2 (Verticale)</Label>
-                    <p className="text-xs text-slate-500 mb-2">Deuxième image de la section "Une vision commune".</p>
+                    <p className="text-xs text-slate-500 mb-2">Format vertical (3:4).</p>
                     <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
                       {siteImages.philImage2 ? (
                         <img src={getImageUrl(siteImages.philImage2)} className="w-full h-full object-cover" alt="Mission 2"/>
                       ) : (
-                        <div className="flex flex-col h-full items-center justify-center text-slate-400">
-                          <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
-                        </div>
+                        <div className="flex flex-col h-full items-center justify-center text-slate-400"><ImageIcon className="h-8 w-8 mb-2 opacity-50"/></div>
                       )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'config', 'philImage2')} disabled={uploading}/>
+                        <Input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileSelect(e, 'config', 'philImage2', 3/4)} disabled={uploading}/>
                         <Button size="sm" variant="secondary" className="pointer-events-none text-xs">Modifier</Button>
                       </div>
                     </div>
@@ -267,7 +267,6 @@ const AdminConfigPage = () => {
           {/* ONGLET 2 : LE BUREAU */}
           <TabsContent value="bureau">
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Formulaire d'ajout */}
               <Card className="border-0 shadow-sm bg-white h-fit">
                 <CardHeader className="bg-[#0A2A5C] text-white rounded-t-xl">
                   <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5"/> Intégrer un membre</CardTitle>
@@ -278,9 +277,10 @@ const AdminConfigPage = () => {
                       <AvatarImage src={getImageUrl(newMember.image)} />
                       <AvatarFallback className="bg-slate-200 text-slate-500"><ImageIcon className="h-6 w-6"/></AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <Label className="text-xs mb-1 block uppercase font-bold text-slate-500">Photo de profil</Label>
-                      <Input type="file" className="text-xs cursor-pointer bg-white" accept="image/*" onChange={(e) => handleFileUpload(e, 'member')} disabled={uploading}/>
+                    <div className="flex-1 relative overflow-hidden group">
+                      <Label className="text-xs mb-1 block uppercase font-bold text-slate-500">Photo de profil (Carrée)</Label>
+                      {/* Ici on force le ratio 1 (carré parfait) */}
+                      <Input type="file" className="text-xs cursor-pointer bg-white relative z-10" accept="image/*" onChange={(e) => handleFileSelect(e, 'member', 'image', 1)} disabled={uploading}/>
                     </div>
                   </div>
 
@@ -334,24 +334,13 @@ const AdminConfigPage = () => {
                           <div>
                             <p className="font-bold text-[#0A2A5C] leading-tight">{m.name}</p>
                             <p className="text-xs text-slate-500 font-medium">{m.role} {m.generation && `• Promo ${m.generation}`}</p>
-                            <div className="flex gap-3 mt-1">
-                              {m.linkedin && <a href={m.linkedin} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1"><Linkedin className="w-3 w-3"/> LinkedIn</a>}
-                              {m.email && <a href={`mailto:${m.email}`} className="text-[10px] text-slate-500 hover:underline flex items-center gap-1"><Mail className="w-3 w-3"/> Email</a>}
-                            </div>
                           </div>
                         </div>
-                        {/* MODIFICATION CRUCIALE : On passe m._id au lieu de l'index i */}
                         <Button size="icon" variant="ghost" className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600" onClick={() => removeTeamMember(m._id || i)}>
                           <Trash2 className="h-4 w-4"/>
                         </Button>
                       </div>
                     ))}
-                    {teamMembers.length === 0 && (
-                      <div className="p-10 text-center text-slate-400">
-                        <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">Aucun membre dans le bureau.</p>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -360,6 +349,18 @@ const AdminConfigPage = () => {
 
         </Tabs>
       </div>
+
+      {/* MODALE DE RECADRAGE */}
+      {cropModalSrc && (
+        <ImageCropModal
+          imageSrc={cropModalSrc}
+          aspect={cropConfig.aspect}
+          isUploading={uploading}
+          onClose={() => setCropModalSrc(null)}
+          onComplete={handleCroppedUpload}
+        />
+      )}
+
     </div>
   );
 };
