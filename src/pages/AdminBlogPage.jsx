@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 // --- IMPORTS TIPTAP ---
@@ -9,6 +9,7 @@ import ImageExtension from '@tiptap/extension-image';
 import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import YoutubeExtension from '@tiptap/extension-youtube';
+import { Node, mergeAttributes } from '@tiptap/core'; // Pour la vidéo locale
 
 import { 
   FileText, ArrowLeft, Trash2, Pencil, 
@@ -16,7 +17,7 @@ import {
   Calendar, Folder, CheckCircle,
   Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, 
   Undo, Redo, Heading1, Heading2, Link as LinkIcon, 
-  Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify, Video
+  Quote, AlignLeft, AlignCenter, AlignRight, AlignJustify, Video, Film
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,29 +32,84 @@ import { useContent } from "@/context/ContentContext";
 import { toast } from "sonner";
 import api from "../api/axios";
 
-// --- SOUS-COMPOSANT : BARRE D'OUTILS TIPTAP (AMÉLIORÉE) ---
+// --- EXTENSION TIPTAP SUR MESURE : VIDÉO LOCALE ---
+const CustomVideo = Node.create({
+  name: 'customVideo',
+  group: 'block',
+  selectable: true,
+  draggable: true,
+  addAttributes() {
+    return { src: { default: null } };
+  },
+  parseHTML() {
+    return [{ tag: 'video' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['video', mergeAttributes(HTMLAttributes, { controls: true, class: 'w-full aspect-video rounded-xl shadow-md my-6 bg-black' })];
+  },
+  addCommands() {
+    return {
+      setCustomVideo: (options) => ({ commands }) => {
+        return commands.insertContent({ type: this.name, attrs: options });
+      },
+    };
+  },
+});
+
+// --- SOUS-COMPOSANT : BARRE D'OUTILS TIPTAP ---
 const MenuBar = ({ editor }) => {
+  const imageInputRef = useRef(null);
+  const videoInputRef = useRef(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+
   if (!editor) return null;
+
+  // Upload automatique (Image ou Vidéo)
+  const uploadMedia = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    // Ton backend attend le champ "image" (même pour une vidéo, c'est le nom de ton champ Multer)
+    formData.append('image', file); 
+
+    const toastId = toast.loading(`Téléchargement de ${type === 'image' ? "l'image" : "la vidéo"} vers le serveur...`);
+    setIsUploadingMedia(true);
+
+    try {
+      const { data } = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const url = typeof data === 'string' ? data : data.url;
+
+      if (type === 'image') {
+        editor.chain().focus().setImage({ src: url }).run();
+      } else {
+        editor.chain().focus().setCustomVideo({ src: url }).run();
+      }
+      toast.success("Média inséré avec succès !", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de l'upload. Fichier trop lourd ou non supporté.", { id: toastId });
+    } finally {
+      setIsUploadingMedia(false);
+      e.target.value = ""; // On réinitialise l'input
+    }
+  };
 
   const addLink = () => {
     const url = window.prompt('URL du lien (ex: https://...) :');
     if (url) editor.chain().focus().setLink({ href: url }).run();
   };
 
-  const addImage = () => {
-    const url = window.prompt('URL de l\'image :');
-    if (url) editor.chain().focus().setImage({ src: url }).run();
-  };
-
   const addYoutubeVideo = () => {
     const url = window.prompt('URL de la vidéo YouTube :');
-    if (url) {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run();
-    }
+    if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
   };
 
   return (
-    <div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50 rounded-t-xl">
+    <div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50 rounded-t-xl items-center">
       {/* Titres */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''} title="Titre 1">
         <Heading1 className="h-4 w-4" />
@@ -62,7 +118,7 @@ const MenuBar = ({ editor }) => {
         <Heading2 className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+      <div className="w-px h-6 bg-slate-300 mx-1" />
       
       {/* Style de texte */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'bg-slate-200' : ''} title="Gras">
@@ -78,7 +134,7 @@ const MenuBar = ({ editor }) => {
         <span className="line-through font-bold">S</span>
       </Button>
 
-      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+      <div className="w-px h-6 bg-slate-300 mx-1" />
 
       {/* Alignements */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200' : ''} title="Aligner à gauche">
@@ -94,7 +150,7 @@ const MenuBar = ({ editor }) => {
         <AlignJustify className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+      <div className="w-px h-6 bg-slate-300 mx-1" />
       
       {/* Listes & Citation */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'bg-slate-200' : ''} title="Liste à puces">
@@ -107,17 +163,28 @@ const MenuBar = ({ editor }) => {
         <Quote className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-slate-300 mx-1 mt-1" />
+      <div className="w-px h-6 bg-slate-300 mx-1" />
 
-      {/* Médias */}
+      {/* Médias & Upload Local */}
       <Button size="sm" variant="ghost" type="button" onClick={addLink} className={editor.isActive('link') ? 'bg-slate-200' : ''} title="Ajouter un lien">
         <LinkIcon className="h-4 w-4" />
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={addImage} title="Ajouter une image (URL)">
-        <ImageIcon className="h-4 w-4" />
+
+      {/* Input caché pour l'image locale */}
+      <input type="file" accept="image/*" className="hidden" ref={imageInputRef} onChange={(e) => uploadMedia(e, 'image')} />
+      <Button size="sm" variant="ghost" type="button" disabled={isUploadingMedia} onClick={() => imageInputRef.current?.click()} title="Uploader une image depuis le PC">
+        {isUploadingMedia ? <Loader2 className="h-4 w-4 animate-spin text-amber-500" /> : <ImageIcon className="h-4 w-4 text-blue-600" />}
       </Button>
-      <Button size="sm" variant="ghost" type="button" onClick={addYoutubeVideo} title="Ajouter une vidéo YouTube">
-        <Video className="h-4 w-4" />
+
+      {/* Input caché pour la vidéo locale */}
+      <input type="file" accept="video/mp4,video/webm" className="hidden" ref={videoInputRef} onChange={(e) => uploadMedia(e, 'video')} />
+      <Button size="sm" variant="ghost" type="button" disabled={isUploadingMedia} onClick={() => videoInputRef.current?.click()} title="Uploader une vidéo depuis le PC">
+        {isUploadingMedia ? <Loader2 className="h-4 w-4 animate-spin text-amber-500" /> : <Film className="h-4 w-4 text-purple-600" />}
+      </Button>
+
+      {/* Lien YouTube */}
+      <Button size="sm" variant="ghost" type="button" onClick={addYoutubeVideo} title="Intégrer une vidéo YouTube">
+        <Video className="h-4 w-4 text-red-600" />
       </Button>
 
       <div className="flex-1" />
@@ -155,7 +222,7 @@ const AdminBlogPage = () => {
   };
   const [newArticle, setNewArticle] = useState(defaultArticle);
 
-  // --- INITIALISATION TIPTAP AVEC TOUTES LES EXTENSIONS ---
+  // --- INITIALISATION TIPTAP ---
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -163,12 +230,13 @@ const AdminBlogPage = () => {
       ImageExtension.configure({ inline: true, allowBase64: true }),
       UnderlineExtension,
       TextAlignExtension.configure({ types: ['heading', 'paragraph'] }),
+      CustomVideo, // Notre extension pour les vidéos du PC
       YoutubeExtension.configure({ 
         inline: false,
         width: 840,
         height: 472.5,
         HTMLAttributes: {
-          class: 'w-full aspect-video rounded-xl shadow-md my-6', // Style Tailwind pour que la vidéo soit parfaite sur mobile et PC
+          class: 'w-full aspect-video rounded-xl shadow-md my-6', 
         },
       }),
     ],
@@ -178,7 +246,6 @@ const AdminBlogPage = () => {
     },
     editorProps: {
       attributes: {
-        // Classes Tailwind pour l'intérieur de l'éditeur
         class: 'prose prose-slate max-w-none focus:outline-none min-h-[400px] p-6 text-slate-700 bg-white rounded-b-xl',
       },
     },
