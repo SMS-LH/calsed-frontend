@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import LinkExtension from '@tiptap/extension-link';
-import ImageExtension from '@tiptap/extension-image';
+// MODIFICATION : On utilise l'extension de redimensionnement au lieu de l'image classique
+import ImageResize from 'tiptap-extension-resize-image';
 import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import YoutubeExtension from '@tiptap/extension-youtube';
@@ -35,6 +36,38 @@ import api from "../api/axios";
 
 // IMPORT DU COMPOSANT DE RECADRAGE
 import ImageCropModal from "@/components/ImageCropModal";
+
+// --- STYLE CSS IMPÉRATIF POUR LE REDIMENSIONNEMENT TIPTAP ---
+const TiptapStyles = () => (
+  <style>{`
+    .ProseMirror .image-resizer {
+      display: inline-block;
+      position: relative;
+      line-height: 0;
+    }
+    .ProseMirror .image-resizer__handler {
+      position: absolute;
+      background: #0A2A5C;
+      border: 2px solid white;
+      border-radius: 2px;
+      width: 12px;
+      height: 12px;
+      z-index: 1;
+    }
+    .ProseMirror .image-resizer__handler--tl { top: -6px; left: -6px; cursor: nwse-resize; }
+    .ProseMirror .image-resizer__handler--tr { top: -6px; right: -6px; cursor: nesw-resize; }
+    .ProseMirror .image-resizer__handler--bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+    .ProseMirror .image-resizer__handler--br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    
+    .ProseMirror img {
+      transition: box-shadow 0.2s;
+    }
+    .ProseMirror img.ProseMirror-selectednode {
+      outline: 3px solid #0A2A5C;
+      box-shadow: 0 0 15px rgba(10, 42, 92, 0.3);
+    }
+  `}</style>
+);
 
 // --- EXTENSION TIPTAP SUR MESURE : VIDÉO LOCALE ---
 const CustomVideo = Node.create({
@@ -214,7 +247,7 @@ const AdminBlogPage = () => {
   const [editingPostId, setEditingPostId] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // --- NOUVEAUX ÉTATS POUR LE RECADRAGE ---
+  // --- ÉTATS POUR LE RECADRAGE ---
   const [cropModalSrc, setCropModalSrc] = useState(null);
 
   // État initial de l'article
@@ -233,10 +266,17 @@ const AdminBlogPage = () => {
     extensions: [
       StarterKit,
       LinkExtension.configure({ openOnClick: false }),
-      ImageExtension.configure({ inline: true, allowBase64: true }),
+      // MODIFICATION : Utilisation de ImageResize au lieu de ImageExtension
+      ImageResize.configure({ 
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'rounded-xl shadow-md my-6', // Classes par défaut pour l'image
+        },
+      }),
       UnderlineExtension,
-      TextAlignExtension.configure({ types: ['heading', 'paragraph'] }),
-      CustomVideo, // Notre extension pour les vidéos du PC
+      // MODIFICATION : Permet à l'alignement de s'appliquer aussi aux images
+      TextAlignExtension.configure({ types: ['heading', 'paragraph', 'image'] }),
+      CustomVideo,
       YoutubeExtension.configure({ 
         inline: false,
         width: 840,
@@ -270,9 +310,8 @@ const AdminBlogPage = () => {
     return `${baseUrl}${cleanPath}`;
   };
 
-  // --- ACTIONS IMAGES (AVEC RECADRAGE) ---
+  // --- ACTIONS IMAGES (AVEC RECADRAGE COUVERTURE) ---
   
-  // Ouvre l'image sélectionnée dans la modale
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -282,10 +321,9 @@ const AdminBlogPage = () => {
       setCropModalSrc(reader.result);
     });
     reader.readAsDataURL(file);
-    e.target.value = ""; // On vide l'input pour pouvoir sélectionner la même image ensuite
+    e.target.value = ""; 
   };
 
-  // Upload l'image APRES recadrage
   const handleCroppedUpload = async (croppedFile) => {
     const formData = new FormData();
     formData.append('image', croppedFile);
@@ -302,7 +340,7 @@ const AdminBlogPage = () => {
       const imageUrl = typeof data === 'string' ? data : data.url;
       setNewArticle(prev => ({ ...prev, image: imageUrl }));
       
-      setCropModalSrc(null); // On ferme la modale
+      setCropModalSrc(null); 
     } catch (error) {
       toast.error("Erreur lors de l'envoi", { id: toastId });
     } finally {
@@ -344,7 +382,6 @@ const AdminBlogPage = () => {
 
       toast.success(editingPostId ? "Article mis à jour avec succès !" : "Article publié avec succès !", { id: toastId });
       
-      // Reset
       setEditingPostId(null);
       setNewArticle(defaultArticle);
       if (editor) editor.commands.setContent(""); 
@@ -401,6 +438,9 @@ const AdminBlogPage = () => {
 
   return (
     <div className="min-h-screen pt-24 pb-20 bg-slate-50/50 relative">
+      {/* MODIFICATION : Ajout du style pour l'éditeur d'images Tiptap */}
+      <TiptapStyles />
+
       <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
         
         {/* EN-TÊTE ET NAVIGATION */}
@@ -498,7 +538,7 @@ const AdminBlogPage = () => {
                       </div>
                     </div>
 
-                    {/* Image de couverture - MODIFIÉ POUR LE RECADRAGE */}
+                    {/* Image de couverture */}
                     <div className="space-y-3">
                       <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><ImageIcon className="h-4 w-4"/> Image de couverture</Label>
                       <div className="flex flex-col sm:flex-row gap-6 items-start p-5 bg-slate-50 rounded-xl border border-slate-100">
