@@ -42,10 +42,11 @@ const TeamPage = () => {
     const fetchSettings = async () => {
       try {
         const { data } = await api.get('/settings');
-        const settingsData = data?.data || data || {};
-        // On cherche une image configurée pour l'école/à propos. 
-        // Si elle n'existe pas, on garde la chaîne vide pour utiliser le fallback
-        setSchoolImage(settingsData.schoolImage || settingsData.aboutImage || settingsData.philImage1 || "");
+        
+        // Le backend renvoie maintenant les données directement à la racine
+        if (data) {
+          setSchoolImage(data.schoolImage || data.aboutImage || data.philImage1 || "");
+        }
       } catch (error) {
         console.error("Erreur de chargement des paramètres de la page.");
       }
@@ -53,12 +54,22 @@ const TeamPage = () => {
     fetchSettings();
   }, []);
 
-  // Gestion sécurisée des URLs d'images (Membres + École)
+  // Gestion sécurisée des URLs d'images (Cloudinary + Fallback local)
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
-    const baseUrl = (process.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
-    return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+
+    // Si l'image vient de Cloudinary (ou base64), on l'affiche telle quelle !
+    if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+
+    // Fallback dynamique pour les anciennes images
+    const baseUrl = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') 
+      : "https://calsed-api.onrender.com";
+      
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${cleanPath}`;
   };
 
   return (
@@ -69,10 +80,10 @@ const TeamPage = () => {
         {/* Overlay premium */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A2A5C] to-[#051630] z-0"></div>
         <div className="absolute inset-0 opacity-5 z-0" 
-             style={{ 
-                 backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', 
-                 backgroundSize: '48px 48px' 
-             }} 
+              style={{ 
+                  backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', 
+                  backgroundSize: '48px 48px' 
+              }} 
         />
         
         <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl">
@@ -241,7 +252,7 @@ const TeamPage = () => {
             viewport={{ once: true, margin: "-50px" }}
           >
             {teamMembers.map((member, index) => (
-              <motion.div key={index} variants={fadeInUp} className="h-full">
+              <motion.div key={member._id || index} variants={fadeInUp} className="h-full">
                 <div className="h-full bg-white border border-slate-200 rounded-none overflow-hidden hover:border-[#0A2A5C] hover:shadow-xl transition-all duration-500 group flex flex-col">
                   
                   {/* Bandeau Supérieur Coloré */}

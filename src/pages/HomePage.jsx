@@ -42,14 +42,15 @@ const HomePage = () => {
   const fetchHomeImages = async () => {
     try {
       const { data } = await api.get('/settings');
-      const settingsData = data?.data || data || {};
       
-      // On extrait uniquement les images des paramètres
-      setImages({
-        heroImage: settingsData.heroImage || "",
-        philImage1: settingsData.philImage1 || "",
-        philImage2: settingsData.philImage2 || "",
-      });
+      // On extrait directement depuis 'data' puisque le backend a été corrigé
+      if (data) {
+        setImages({
+          heroImage: data.heroImage || "",
+          philImage1: data.philImage1 || "",
+          philImage2: data.philImage2 || "",
+        });
+      }
     } catch (error) {
       console.error("Erreur de chargement des images de la page d'accueil.");
     }
@@ -59,18 +60,22 @@ const HomePage = () => {
     .filter(post => post.featured === true || post.featured === "true")
     .slice(0, 3);
 
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
 
-  // Si l'image vient de Cloudinary, on l'affiche telle quelle !
-  if (imagePath.startsWith('http')) {
-    return imagePath;
-  }
+    // Si l'image vient de Cloudinary, on l'affiche telle quelle !
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
 
-  // Fallback pour les vieilles images locales (à éviter à l'avenir)
-  const baseUrl = "https://calsed-api.onrender.com";
-  return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
-};
+    // Fallback dynamique pour les anciennes images (au cas où)
+    const baseUrl = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') 
+      : "https://calsed-api.onrender.com";
+      
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseUrl}${cleanPath}`;
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 antialiased selection:bg-[#0A2A5C] selection:text-white">
@@ -191,7 +196,7 @@ const getImageUrl = (imagePath) => {
                 <div className="space-y-6 z-10 pt-12">
                       <div className="aspect-[3/4] bg-slate-100 rounded-none overflow-hidden shadow-lg border border-white">
                         {images.philImage1 ? (
-                          <img src={getImageUrl(images.philImage1)} className="w-full h-full object-cover" alt="Mission" />
+                          <img src={getImageUrl(images.philImage1)} className="w-full h-full object-cover" alt="Mission 1" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center"><Building2 className="w-10 h-10 text-slate-400"/></div>
                         )}

@@ -33,34 +33,37 @@ const AdminConfigPage = () => {
     email: "" 
   });
 
-  // --- ÉTATS IMAGES DU SITE (Simplifié : uniquement les images) ---
+  // --- ÉTATS IMAGES DU SITE ---
   const [siteImages, setSiteImages] = useState({
     heroImage: "", 
     philImage1: "", 
     philImage2: "",
-    schoolImage: "" // <-- Nouvelle image pour la page Équipe
+    schoolImage: "" 
   });
 
   useEffect(() => {
     fetchSiteImages();
   }, []);
 
-const fetchSiteImages = async () => {
-  try {
-    const { data } = await api.get('/settings');
-    // On prend l'objet tel quel puisque le backend renvoie les champs à la racine
-    setSiteImages({
-      heroImage: data.heroImage || "",
-      philImage1: data.philImage1 || "",
-      philImage2: data.philImage2 || "" ,
-      schoolImage: data.schoolImage || ""
-    });
-  } catch (e) { 
-    toast.error("Erreur de chargement des images");
-  } finally {
-    setIsLoadingConfig(false);
-  }
-};
+  const fetchSiteImages = async () => {
+    try {
+      const { data } = await api.get('/settings');
+      
+      // Sécurité : si data est null (première initialisation), on garde les valeurs par défaut
+      if (data) {
+        setSiteImages({
+          heroImage: data.heroImage || "",
+          philImage1: data.philImage1 || "",
+          philImage2: data.philImage2 || "" ,
+          schoolImage: data.schoolImage || ""
+        });
+      }
+    } catch (e) { 
+      toast.error("Erreur de chargement des images");
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
 
   const handleSaveImages = async () => {
     const toastId = toast.loading("Mise à jour des images en cours...");
@@ -87,8 +90,7 @@ const fetchSiteImages = async () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // Avec Cloudinary, 'data' est directement l'URL (https://res.cloudinary.com/...)
-      // Si ton backend renvoie un objet { url: "..." }, utilise data.url
+      // data contient directement l'URL Cloudinary renvoyée par le backend
       const imageUrl = typeof data === 'string' ? data : data.url;
       
       if (!imageUrl) throw new Error("URL d'image non reçue");
@@ -108,11 +110,14 @@ const fetchSiteImages = async () => {
     }
   };
 
-  const handleAddMember = () => {
+  const handleAddMember = async () => {
     if (!newMember.name || !newMember.role) return toast.error("Nom et Rôle requis");
-    addTeamMember(newMember);
-    setNewMember({ name: "", role: "", generation: "", image: "", linkedin: "", email: "" });
-    toast.success("Membre ajouté au bureau !");
+    
+    // addTeamMember doit maintenant retourner une promesse dans le ContentContext
+    const success = await addTeamMember(newMember);
+    if (success) {
+      setNewMember({ name: "", role: "", generation: "", image: "", linkedin: "", email: "" });
+    }
   };
 
   if (isLoadingConfig) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-[#0A2A5C]"/></div>;
@@ -139,7 +144,7 @@ const fetchSiteImages = async () => {
             <TabsTrigger value="bureau" className="gap-2 text-base px-6 py-3"><Users className="h-4 w-4"/> Le Bureau CALSED</TabsTrigger>
           </TabsList>
 
-          {/* ONGLET 1 : IMAGES DU SITE (Nouveau design) */}
+          {/* ONGLET 1 : IMAGES DU SITE */}
           <TabsContent value="images">
             <Card className="border-0 shadow-sm bg-white">
               <CardHeader className="bg-slate-100/50 border-b flex flex-row items-center justify-between">
@@ -241,7 +246,7 @@ const fetchSiteImages = async () => {
             </Card>
           </TabsContent>
 
-          {/* ONGLET 2 : LE BUREAU (Inchangé mais avec un style épuré) */}
+          {/* ONGLET 2 : LE BUREAU */}
           <TabsContent value="bureau">
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Formulaire d'ajout */}
@@ -302,7 +307,7 @@ const fetchSiteImages = async () => {
                 <CardContent className="p-0">
                   <div className="divide-y max-h-[600px] overflow-y-auto custom-scrollbar">
                     {teamMembers.map((m, i) => (
-                      <div key={i} className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors group">
+                      <div key={m._id || i} className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors group">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12 border shadow-sm">
                             <AvatarImage src={m.image} />
@@ -317,7 +322,8 @@ const fetchSiteImages = async () => {
                             </div>
                           </div>
                         </div>
-                        <Button size="icon" variant="ghost" className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600" onClick={() => removeTeamMember(i)}>
+                        {/* MODIFICATION CRUCIALE : On passe m._id au lieu de l'index i */}
+                        <Button size="icon" variant="ghost" className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600" onClick={() => removeTeamMember(m._id || i)}>
                           <Trash2 className="h-4 w-4"/>
                         </Button>
                       </div>
