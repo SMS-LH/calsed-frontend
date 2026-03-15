@@ -22,7 +22,7 @@ const AdminMembersPage = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // NOUVEAU : États pour les filtres avancés
+  // États pour les filtres avancés
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -41,7 +41,7 @@ const AdminMembersPage = () => {
     }
   };
 
-  // --- ACTIONS EXISTANTES AMÉLIORÉES ---
+  // --- ACTIONS ---
   const handleValidateUser = async (id, name) => {
     try {
       await api.put(`/users/${id}/validate`);
@@ -80,7 +80,7 @@ const AdminMembersPage = () => {
     }
   };
 
-  // --- NOUVELLE FONCTIONNALITÉ : EXPORT CSV ---
+  // --- EXPORT CSV ---
   const handleExportCSV = () => {
     const headers = ["Nom", "Email", "Téléphone", "Promotion", "Statut Cotisation", "Date de fin"];
     const csvContent = [
@@ -103,13 +103,13 @@ const AdminMembersPage = () => {
     toast.success("Fichier Excel/CSV généré !");
   };
 
-  // --- NOUVELLE FONCTIONNALITÉ : COPIE RAPIDE ---
+  // --- COPIE RAPIDE ---
   const copyToClipboard = (text, type) => {
     navigator.clipboard.writeText(text);
     toast.success(`${type} copié !`);
   };
 
-  // --- LOGIQUE DE FILTRAGE AVANCÉE ---
+  // --- LOGIQUE DE FILTRAGE ---
   const filteredUsers = allUsers.filter(u => {
     const searchMatch = 
       u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -131,43 +131,43 @@ const AdminMembersPage = () => {
   if (isLoading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-[#0A2A5C]"/></div>;
 
   return (
-    <div className="min-h-screen pt-24 pb-12 bg-slate-50/50">
+    <div className="min-h-screen pt-20 md:pt-24 pb-12 bg-slate-50/50">
       <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
         
         {/* EN-TÊTE ET NAVIGATION */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-4 text-slate-500 hover:text-[#0A2A5C]">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Retour au Dashboard
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+          <div className="w-full md:w-auto">
+            <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-2 md:-ml-4 text-slate-500 hover:text-[#0A2A5C] px-2 md:px-4">
+              <ArrowLeft className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Retour au Dashboard</span><span className="sm:hidden">Retour</span>
             </Button>
-            <h1 className="text-3xl font-bold font-display text-[#0A2A5C] flex items-center gap-3">
-              <Users className="h-8 w-8 text-blue-600" /> Gestion des Membres
+            <h1 className="text-2xl md:text-3xl font-bold font-display text-[#0A2A5C] flex items-center gap-2 md:gap-3">
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-600" /> Gestion Membres
             </h1>
           </div>
-          <Button onClick={handleExportCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Download className="h-4 w-4 mr-2" /> Exporter la liste (CSV)
+          <Button onClick={handleExportCSV} className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white h-12 md:h-10">
+            <Download className="h-4 w-4 mr-2" /> Exporter (CSV)
           </Button>
         </div>
 
         {/* ALERTES (Membres en attente) */}
         {pendingUsers.length > 0 && (
-          <Card className="border-l-4 border-l-amber-500 shadow-sm bg-amber-50/50 mb-8">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-amber-700 flex items-center gap-2 text-lg">
+          <Card className="border-l-4 border-l-amber-500 shadow-sm bg-amber-50/50 mb-6 md:mb-8">
+            <CardHeader className="pb-2 p-4 md:p-6">
+              <CardTitle className="text-amber-700 flex items-center gap-2 text-base md:text-lg">
                 <UserCheck className="h-5 w-5"/> {pendingUsers.length} Inscription(s) en attente
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 p-4 md:p-6 pt-0 md:pt-2">
               {pendingUsers.map(u => (
-                <div key={u._id} className="bg-white p-4 rounded-xl border shadow-sm flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10"><AvatarFallback className="bg-amber-100 text-amber-700 font-bold">{u.name[0]}</AvatarFallback></Avatar>
-                    <div>
-                      <p className="font-bold text-sm text-[#0A2A5C]">{u.name}</p>
-                      <p className="text-xs text-slate-500">Promo {u.generation} • {u.phone}</p>
+                <div key={u._id} className="bg-white p-3 md:p-4 rounded-xl border shadow-sm flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-10 w-10 shrink-0"><AvatarFallback className="bg-amber-100 text-amber-700 font-bold">{u.name[0]}</AvatarFallback></Avatar>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-[#0A2A5C] truncate">{u.name}</p>
+                      <p className="text-xs text-slate-500 truncate">Promo {u.generation || 'N/A'}</p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     <Button size="icon" className="bg-green-600 hover:bg-green-700 h-8 w-8 rounded-full" onClick={() => handleValidateUser(u._id, u.name)}>
                       <CheckCircle className="h-4 w-4"/>
                     </Button>
@@ -183,20 +183,20 @@ const AdminMembersPage = () => {
 
         {/* BARRE DE RECHERCHE ET FILTRES */}
         <Card className="border-0 shadow-sm bg-white mb-6">
-          <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+          <CardContent className="p-3 md:p-4 flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"/>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
               <Input 
                 placeholder="Chercher par nom, email ou téléphone..." 
-                className="pl-10 bg-slate-50" 
+                className="pl-10 bg-slate-50 h-12 md:h-10 text-sm" 
                 value={searchTerm} 
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto">
-              <Filter className="h-4 w-4 text-slate-400" />
+              <Filter className="h-4 w-4 text-slate-400 hidden md:block" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[200px] bg-slate-50">
+                <SelectTrigger className="w-full md:w-[220px] bg-slate-50 h-12 md:h-10 text-sm">
                   <SelectValue placeholder="Filtrer par statut" />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,85 +210,98 @@ const AdminMembersPage = () => {
           </CardContent>
         </Card>
 
-        {/* TABLEAU PRINCIPAL */}
+        {/* TABLEAU PRINCIPAL (Refactorisé en Grid Responsive) */}
         <Card className="border-0 shadow-sm bg-white overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 uppercase font-bold text-[10px] text-slate-500 border-b">
-                <tr>
-                  <th className="px-6 py-4">Membre (Nom & Contact)</th>
-                  <th className="px-6 py-4">Promotion</th>
-                  <th className="px-6 py-4">État Cotisation</th>
-                  <th className="px-6 py-4 text-right">Actions Rapides</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredUsers.filter(u => u.isValidated).map(u => {
-                  const isOk = u.paidUntil && new Date(u.paidUntil) > new Date();
-                  return (
-                    <tr key={u._id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-[#0A2A5C] text-base">{u.name}</span>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                            <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600" onClick={() => copyToClipboard(u.email, 'Email')}>
-                              <Mail className="h-3 w-3" /> {u.email}
-                            </span>
-                            {u.phone && (
-                              <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600" onClick={() => copyToClipboard(u.phone, 'Téléphone')}>
-                                <Phone className="h-3 w-3" /> {u.phone}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-600">Promo {u.generation || 'N/A'}</Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col items-start gap-1">
-                          <Badge variant="outline" className={isOk ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}>
-                            {isOk ? "À jour" : "Expirée"}
-                          </Badge>
-                          {u.paidUntil && (
-                            <span className="text-[10px] text-slate-400">
-                              Jusqu'au {new Date(u.paidUntil).toLocaleDateString('fr-FR')}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end items-center gap-3">
-                          {!isOk && (
-                            <Button size="sm" variant="ghost" onClick={() => handleSendReminder(u._id, u.name, u.email)} className="h-8 text-xs text-amber-600 hover:bg-amber-50 hover:text-amber-700">
-                              <Send className="h-3 w-3 mr-1.5"/> Relancer
-                            </Button>
-                          )}
-                          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden h-8 bg-white shadow-sm">
-                            <Button size="icon" variant="ghost" className="h-full w-8 border-r rounded-none hover:bg-red-50 hover:text-red-600" onClick={() => handleModifySubscription(u._id, u.name, -1)} title="Retirer 1 mois">
-                              <MinusCircle className="h-3.5 w-3.5"/>
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-full w-8 text-green-600 rounded-none hover:bg-green-50" onClick={() => handleModifySubscription(u._id, u.name, 1)} title="Ajouter 1 mois">
-                              <Plus className="h-3.5 w-3.5"/>
-                            </Button>
-                          </div>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => handleDeleteUser(u._id, u.name)} title="Supprimer le membre">
-                            <Trash2 className="h-4 w-4"/>
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {filteredUsers.filter(u => u.isValidated).length === 0 && (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
-                      Aucun membre ne correspond à votre recherche.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          
+          {/* En-tête Desktop (Caché sur Mobile) */}
+          <div className="hidden md:grid grid-cols-12 gap-4 p-4 bg-slate-50 border-b text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <div className="col-span-5">Membre (Nom & Contact)</div>
+            <div className="col-span-2">Promotion</div>
+            <div className="col-span-2">État Cotisation</div>
+            <div className="col-span-3 text-right">Actions Rapides</div>
+          </div>
+
+          {/* Liste des Membres */}
+          <div className="divide-y divide-slate-100">
+            {filteredUsers.filter(u => u.isValidated).map(u => {
+              const isOk = u.paidUntil && new Date(u.paidUntil) > new Date();
+              
+              return (
+                <div key={u._id} className="flex flex-col md:grid md:grid-cols-12 gap-4 p-4 md:p-4 hover:bg-slate-50/80 transition-colors">
+                  
+                  {/* Info Membre */}
+                  <div className="md:col-span-5 flex flex-col justify-center">
+                    <div className="flex justify-between items-start md:block">
+                      <span className="font-bold text-[#0A2A5C] text-base">{u.name}</span>
+                      {/* Badge Promo visible en haut à droite sur Mobile uniquement */}
+                      <Badge variant="secondary" className="md:hidden bg-slate-100 text-slate-600 text-[10px]">Promo {u.generation || 'N/A'}</Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-slate-500">
+                      <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600 truncate" onClick={() => copyToClipboard(u.email, 'Email')}>
+                        <Mail className="h-3 w-3 shrink-0" /> {u.email}
+                      </span>
+                      {u.phone && (
+                        <span className="flex items-center gap-1 cursor-pointer hover:text-blue-600 shrink-0" onClick={() => copyToClipboard(u.phone, 'Téléphone')}>
+                          <Phone className="h-3 w-3 shrink-0" /> {u.phone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Promo (Desktop) */}
+                  <div className="hidden md:flex md:col-span-2 items-center">
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-600">Promo {u.generation || 'N/A'}</Badge>
+                  </div>
+
+                  {/* Cotisation */}
+                  <div className="md:col-span-2 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-center mt-2 md:mt-0 pt-2 md:pt-0 border-t border-slate-100 md:border-0">
+                    <span className="text-xs text-slate-500 md:hidden font-medium">Cotisation :</span>
+                    <div className="flex flex-col items-end md:items-start gap-1">
+                      <Badge variant="outline" className={isOk ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"}>
+                        {isOk ? "À jour" : "Expirée"}
+                      </Badge>
+                      {u.paidUntil && (
+                        <span className="text-[10px] text-slate-400">
+                          Jusqu'au {new Date(u.paidUntil).toLocaleDateString('fr-FR')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="md:col-span-3 flex flex-wrap justify-end items-center gap-2 mt-2 md:mt-0">
+                    {!isOk && (
+                      <Button size="sm" variant="ghost" onClick={() => handleSendReminder(u._id, u.name, u.email)} className="h-8 md:h-9 text-xs text-amber-600 hover:bg-amber-50 hover:text-amber-700 w-full sm:w-auto justify-center mb-2 sm:mb-0 bg-amber-50 md:bg-transparent">
+                        <Send className="h-3 w-3 mr-1.5"/> Relancer
+                      </Button>
+                    )}
+                    
+                    <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden h-8 md:h-9 bg-white shadow-sm shrink-0">
+                      <Button size="icon" variant="ghost" className="h-full w-8 md:w-9 border-r rounded-none hover:bg-red-50 hover:text-red-600" onClick={() => handleModifySubscription(u._id, u.name, -1)} title="Retirer 1 mois">
+                        <MinusCircle className="h-3.5 w-3.5"/>
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-full w-8 md:w-9 text-green-600 rounded-none hover:bg-green-50" onClick={() => handleModifySubscription(u._id, u.name, 1)} title="Ajouter 1 mois">
+                        <Plus className="h-3.5 w-3.5"/>
+                      </Button>
+                    </div>
+                    
+                    <Button size="icon" variant="ghost" className="h-8 w-8 md:h-9 md:w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg shrink-0" onClick={() => handleDeleteUser(u._id, u.name)} title="Supprimer le membre">
+                      <Trash2 className="h-4 w-4"/>
+                    </Button>
+                  </div>
+
+                </div>
+              );
+            })}
+
+            {/* État vide */}
+            {filteredUsers.filter(u => u.isValidated).length === 0 && (
+              <div className="p-12 text-center text-slate-500 flex flex-col items-center">
+                <Users className="h-10 w-10 text-slate-300 mb-3" />
+                <p className="font-medium">Aucun membre ne correspond à votre recherche.</p>
+                <Button variant="link" onClick={() => {setSearchTerm(""); setStatusFilter("all")}} className="text-[#0A2A5C] mt-2">Réinitialiser les filtres</Button>
+              </div>
+            )}
           </div>
         </Card>
       </div>

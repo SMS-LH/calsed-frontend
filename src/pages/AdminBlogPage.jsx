@@ -5,12 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import LinkExtension from '@tiptap/extension-link';
-// MODIFICATION : On utilise l'extension de redimensionnement au lieu de l'image classique
 import ImageResize from 'tiptap-extension-resize-image';
 import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import YoutubeExtension from '@tiptap/extension-youtube';
-import { Node, mergeAttributes } from '@tiptap/core'; // Pour la vidéo locale
+import { Node, mergeAttributes } from '@tiptap/core';
 
 // --- IMPORTS ICONS & UI ---
 import { 
@@ -145,7 +144,7 @@ const MenuBar = ({ editor }) => {
   };
 
   return (
-    <div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50 rounded-t-xl items-center">
+    <div className="border-b border-slate-200 p-2 flex flex-wrap gap-1 bg-slate-50 rounded-t-xl items-center justify-center sm:justify-start">
       {/* Titres */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''} title="Titre 1">
         <Heading1 className="h-4 w-4" />
@@ -154,7 +153,7 @@ const MenuBar = ({ editor }) => {
         <Heading2 className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-slate-300 mx-1" />
+      <div className="hidden sm:block w-px h-6 bg-slate-300 mx-1" />
       
       {/* Style de texte */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'bg-slate-200' : ''} title="Gras">
@@ -170,7 +169,7 @@ const MenuBar = ({ editor }) => {
         <span className="line-through font-bold">S</span>
       </Button>
 
-      <div className="w-px h-6 bg-slate-300 mx-1" />
+      <div className="hidden sm:block w-px h-6 bg-slate-300 mx-1" />
 
       {/* Alignements */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().setTextAlign('left').run()} className={editor.isActive({ textAlign: 'left' }) ? 'bg-slate-200' : ''} title="Aligner à gauche">
@@ -186,7 +185,7 @@ const MenuBar = ({ editor }) => {
         <AlignJustify className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-slate-300 mx-1" />
+      <div className="hidden sm:block w-px h-6 bg-slate-300 mx-1" />
       
       {/* Listes & Citation */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'bg-slate-200' : ''} title="Liste à puces">
@@ -199,7 +198,7 @@ const MenuBar = ({ editor }) => {
         <Quote className="h-4 w-4" />
       </Button>
       
-      <div className="w-px h-6 bg-slate-300 mx-1" />
+      <div className="hidden sm:block w-px h-6 bg-slate-300 mx-1" />
 
       {/* Médias & Upload Local */}
       <Button size="sm" variant="ghost" type="button" onClick={addLink} className={editor.isActive('link') ? 'bg-slate-200' : ''} title="Ajouter un lien">
@@ -223,7 +222,7 @@ const MenuBar = ({ editor }) => {
         <Video className="h-4 w-4 text-red-600" />
       </Button>
 
-      <div className="flex-1" />
+      <div className="hidden sm:block flex-1" />
 
       {/* Historique */}
       <Button size="sm" variant="ghost" type="button" onClick={() => editor.chain().focus().undo().run()} title="Annuler">
@@ -266,15 +265,13 @@ const AdminBlogPage = () => {
     extensions: [
       StarterKit,
       LinkExtension.configure({ openOnClick: false }),
-      // MODIFICATION : Utilisation de ImageResize au lieu de ImageExtension
       ImageResize.configure({ 
         allowBase64: true,
         HTMLAttributes: {
-          class: 'rounded-xl shadow-md my-6', // Classes par défaut pour l'image
+          class: 'rounded-xl shadow-md my-6',
         },
       }),
       UnderlineExtension,
-      // MODIFICATION : Permet à l'alignement de s'appliquer aussi aux images
       TextAlignExtension.configure({ types: ['heading', 'paragraph', 'image'] }),
       CustomVideo,
       YoutubeExtension.configure({ 
@@ -292,12 +289,11 @@ const AdminBlogPage = () => {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-slate max-w-none focus:outline-none min-h-[400px] p-6 text-slate-700 bg-white rounded-b-xl',
+        class: 'prose prose-slate max-w-none focus:outline-none min-h-[300px] md:min-h-[400px] p-4 md:p-6 text-slate-700 bg-white rounded-b-xl',
       },
     },
   });
 
-  // --- UTILITAIRE IMAGE : CORRIGÉ POUR CREATE REACT APP ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
@@ -310,8 +306,7 @@ const AdminBlogPage = () => {
     return `${baseUrl}${cleanPath}`;
   };
 
-  // --- ACTIONS IMAGES (AVEC RECADRAGE COUVERTURE) ---
-  
+  // --- ACTIONS IMAGES ---
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -437,88 +432,91 @@ const AdminBlogPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-slate-50/50 relative">
-      {/* MODIFICATION : Ajout du style pour l'éditeur d'images Tiptap */}
+    <div className="min-h-screen pt-20 md:pt-24 pb-20 bg-slate-50/50 relative">
       <TiptapStyles />
 
-      <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
         
         {/* EN-TÊTE ET NAVIGATION */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-4 text-slate-500 hover:text-[#0A2A5C]">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Retour au Dashboard
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+          <div className="w-full md:w-auto">
+            <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-2 md:-ml-4 text-slate-500 hover:text-[#0A2A5C] px-2 md:px-4">
+              <ArrowLeft className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Retour au Dashboard</span><span className="sm:hidden">Retour</span>
             </Button>
-            <h1 className="text-3xl font-bold font-display text-[#0A2A5C] flex items-center gap-3">
-              <FileText className="h-8 w-8 text-green-600" /> Journal & Communication
+            <h1 className="text-2xl md:text-3xl font-bold font-display text-[#0A2A5C] flex items-center gap-2 md:gap-3">
+              <FileText className="h-6 w-6 md:h-8 md:w-8 text-green-600" /> Journal & Comm.
             </h1>
           </div>
-          <Button onClick={() => {handleCancelEdit(); window.scrollTo({ top: 0, behavior: 'smooth' });}} className="bg-[#0A2A5C] hover:bg-[#08224a] text-white">
+          <Button 
+            onClick={() => {handleCancelEdit(); window.scrollTo({ top: 0, behavior: 'smooth' });}} 
+            className="w-full md:w-auto bg-[#0A2A5C] hover:bg-[#08224a] text-white h-12 md:h-10"
+          >
             <Plus className="h-4 w-4 mr-2" /> Nouvel Article
           </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 items-start">
+        <div className="grid lg:grid-cols-3 gap-6 md:gap-8 items-start">
           
           {/* COLONNE GAUCHE : L'ÉDITEUR */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="border-0 shadow-sm bg-white overflow-hidden">
-              <CardHeader className={`${editingPostId ? 'bg-amber-50' : 'bg-slate-50'} border-b flex flex-row items-center justify-between`}>
-                <CardTitle className="text-[#0A2A5C]">
-                  {editingPostId ? "Modifier l'article" : "Rédiger un nouvel article"}
+              <CardHeader className={`${editingPostId ? 'bg-amber-50' : 'bg-slate-50'} border-b flex flex-row items-center justify-between p-4 md:p-6`}>
+                <CardTitle className="text-[#0A2A5C] text-lg md:text-xl">
+                  {editingPostId ? "Modifier l'article" : "Rédiger un article"}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase text-slate-400">Mode Aperçu</span>
+                  <span className="hidden sm:inline text-xs font-bold uppercase text-slate-400">Mode Aperçu</span>
+                  <span className="sm:hidden text-xs font-bold uppercase text-slate-400">Aperçu</span>
                   <Switch checked={showPreview} onCheckedChange={setShowPreview} />
                 </div>
               </CardHeader>
               
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 {showPreview ? (
                   // MODE APERÇU 
-                  <div className="bg-white p-6 md:p-10 rounded-xl border border-dashed border-slate-300 min-h-[400px]">
-                    <div className="mb-8 text-center">
-                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 mb-4">{newArticle.category}</Badge>
-                      <h1 className="text-3xl md:text-4xl font-black text-[#0A2A5C] leading-tight mb-4">{newArticle.title || "Titre de votre article"}</h1>
-                      {newArticle.excerpt && <p className="text-xl text-slate-500 italic font-serif max-w-2xl mx-auto">"{newArticle.excerpt}"</p>}
+                  <div className="bg-white p-4 md:p-10 rounded-xl border border-dashed border-slate-300 min-h-[400px]">
+                    <div className="mb-6 md:mb-8 text-center">
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 mb-3 md:mb-4">{newArticle.category}</Badge>
+                      <h1 className="text-2xl md:text-4xl font-black text-[#0A2A5C] leading-tight mb-3 md:mb-4">{newArticle.title || "Titre de votre article"}</h1>
+                      {newArticle.excerpt && <p className="text-lg md:text-xl text-slate-500 italic font-serif max-w-2xl mx-auto">"{newArticle.excerpt}"</p>}
                     </div>
                     
                     {newArticle.image && (
-                      <div className="w-full h-64 md:h-96 rounded-2xl overflow-hidden mb-10 shadow-lg">
+                      <div className="w-full h-48 md:h-96 rounded-xl md:rounded-2xl overflow-hidden mb-8 md:mb-10 shadow-lg">
                         <img src={getImageUrl(newArticle.image)} alt="Couverture" className="w-full h-full object-cover" />
                       </div>
                     )}
                     
                     <div 
-                      className="prose prose-lg prose-slate mx-auto max-w-3xl
+                      className="prose prose-base md:prose-lg prose-slate mx-auto max-w-3xl
                       [overflow-wrap:anywhere] [hyphens:none]
                       prose-headings:font-display prose-headings:text-[#0A2A5C] prose-headings:font-bold
-                      prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg prose-p:text-justify
+                      prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-justify
                       prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
-                      prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
-                      prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
+                      prose-img:rounded-xl md:prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
+                      prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-4 md:prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
                       dangerouslySetInnerHTML={{ __html: newArticle.content || "<p class='text-slate-400 text-center italic'>Commencez à rédiger pour voir l'aperçu du contenu...</p>" }} 
                     />
                   </div>
                 ) : (
                   // MODE ÉDITION
-                  <div className="space-y-8">
+                  <div className="space-y-6 md:space-y-8">
                     {/* Titre */}
                     <div>
                       <Input 
                         placeholder="Titre accrocheur..." 
                         value={newArticle.title} 
                         onChange={(e) => setNewArticle({...newArticle, title: e.target.value})} 
-                        className="text-2xl font-bold h-14 border-0 border-b-2 border-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-[#0A2A5C] px-0 bg-transparent" 
+                        className="text-xl md:text-2xl font-bold h-12 md:h-14 border-0 border-b-2 border-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-[#0A2A5C] px-0 bg-transparent" 
                       />
                     </div>
 
-                    {/* Catégorie & Mise en avant */}
-                    <div className="grid sm:grid-cols-2 gap-6 p-5 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="space-y-3">
+                    {/* Catégorie & Mise en avant (Empilé sur mobile) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 p-4 md:p-5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="space-y-2 md:space-y-3">
                         <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><Folder className="h-4 w-4"/> Rubrique</Label>
                         <Select value={newArticle.category} onValueChange={(val) => setNewArticle({...newArticle, category: val})}>
-                          <SelectTrigger className="bg-white border-slate-200 shadow-sm">
+                          <SelectTrigger className="bg-white border-slate-200 shadow-sm h-10 md:h-10">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -529,7 +527,7 @@ const AdminBlogPage = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-2 md:space-y-3">
                         <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><Star className="h-4 w-4"/> Visibilité</Label>
                         <div className="flex items-center justify-between border border-slate-200 px-4 h-10 rounded-md bg-white shadow-sm">
                           <span className="text-sm font-medium text-slate-700">Mettre à la une</span>
@@ -538,54 +536,54 @@ const AdminBlogPage = () => {
                       </div>
                     </div>
 
-                    {/* Image de couverture */}
-                    <div className="space-y-3">
+                    {/* Image de couverture (Responsive direction) */}
+                    <div className="space-y-2 md:space-y-3">
                       <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2"><ImageIcon className="h-4 w-4"/> Image de couverture</Label>
-                      <div className="flex flex-col sm:flex-row gap-6 items-start p-5 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="flex flex-col sm:flex-row gap-4 md:gap-6 items-start p-4 md:p-5 bg-slate-50 rounded-xl border border-slate-100">
                         {newArticle.image ? (
-                          <div className="relative h-32 w-48 rounded-lg overflow-hidden border shadow-sm group shrink-0">
+                          <div className="relative h-32 w-full sm:w-48 rounded-lg overflow-hidden border shadow-sm group shrink-0">
                             <img src={getImageUrl(newArticle.image)} className="h-full w-full object-cover" alt="Preview"/>
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Button size="sm" variant="destructive" onClick={() => setNewArticle({...newArticle, image: ""})} className="h-8 text-xs font-bold">Retirer</Button>
                             </div>
                           </div>
                         ) : (
-                          <div className="h-32 w-48 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center bg-white shrink-0">
+                          <div className="h-32 w-full sm:w-48 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center bg-white shrink-0">
                             <ImageIcon className="h-8 w-8 text-slate-300 mb-2"/>
                             <span className="text-[10px] text-slate-400 uppercase font-bold">Aucune image</span>
                           </div>
                         )}
                         
-                        <div className="flex-1 space-y-4 w-full">
+                        <div className="flex-1 space-y-3 md:space-y-4 w-full">
                           <div>
-                            <Input type="file" accept="image/*" onChange={handleFileSelect} disabled={uploading} className="cursor-pointer bg-white"/>
-                            <p className="text-[11px] text-slate-500 mt-2">L'image sera automatiquement recadrée au format 16:9.</p>
+                            <Input type="file" accept="image/*" onChange={handleFileSelect} disabled={uploading} className="cursor-pointer bg-white h-10 md:h-10 text-xs md:text-sm"/>
+                            <p className="text-[10px] md:text-[11px] text-slate-500 mt-2">L'image sera automatiquement recadrée au format 16:9.</p>
                           </div>
                           <div className="relative">
                             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
                             <div className="relative flex justify-center text-xs uppercase"><span className="bg-slate-50 px-2 text-slate-400 font-bold">OU</span></div>
                           </div>
-                          <Input placeholder="Coller une URL d'image externe..." value={newArticle.image} onChange={(e) => setNewArticle({...newArticle, image: e.target.value})} className="bg-white" />
+                          <Input placeholder="Coller une URL d'image externe..." value={newArticle.image} onChange={(e) => setNewArticle({...newArticle, image: e.target.value})} className="bg-white h-10 md:h-10 text-xs md:text-sm" />
                         </div>
                       </div>
                     </div>
 
                     {/* Extrait */}
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                       <Label className="text-xs text-slate-500 uppercase font-bold flex justify-between">
-                        <span>Extrait (Résumé affiché sur l'accueil)</span>
+                        <span>Extrait (Résumé)</span>
                         <span className="text-slate-400 font-normal">Optionnel</span>
                       </Label>
                       <Input 
                         placeholder="Une phrase courte pour donner envie de lire..." 
                         value={newArticle.excerpt} 
                         onChange={(e) => setNewArticle({...newArticle, excerpt: e.target.value})} 
-                        className="bg-slate-50 border-slate-200"
+                        className="bg-slate-50 border-slate-200 h-10 md:h-10 text-xs md:text-sm"
                       />
                     </div>
 
                     {/* TIPTAP EDITOR */}
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-2 md:space-y-3 pt-2">
                       <Label className="text-xs text-slate-500 uppercase font-bold">Contenu principal de l'article</Label>
                       <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#0A2A5C] transition-all flex flex-col">
                         <MenuBar editor={editor} />
@@ -597,13 +595,13 @@ const AdminBlogPage = () => {
                 )}
               </CardContent>
 
-              <CardFooter className="p-6 bg-slate-50 border-t flex gap-4 justify-end">
+              <CardFooter className="p-4 md:p-6 bg-slate-50 border-t flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
                 {editingPostId && (
-                  <Button variant="outline" onClick={handleCancelEdit} className="border-slate-300 text-slate-600 bg-white">
+                  <Button variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto border-slate-300 text-slate-600 bg-white h-12 sm:h-10">
                     Annuler les modifications
                   </Button>
                 )}
-                <Button onClick={handleSaveArticle} disabled={uploading || !newArticle.title} className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-[150px] shadow-md">
+                <Button onClick={handleSaveArticle} disabled={uploading || !newArticle.title} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white min-w-[150px] shadow-md h-12 sm:h-10">
                   {uploading ? <Loader2 className="animate-spin h-4 w-4 mr-2"/> : <CheckCircle className="h-4 w-4 mr-2"/>}
                   {editingPostId ? "Enregistrer" : "Publier l'article"}
                 </Button>
@@ -613,48 +611,49 @@ const AdminBlogPage = () => {
 
           {/* COLONNE DROITE : LISTE DES ARTICLES */}
           <div className="lg:col-span-1">
-            <Card className="border-0 shadow-sm bg-white sticky top-24">
-              <CardHeader className="border-b bg-[#0A2A5C] text-white rounded-t-xl">
-                <CardTitle className="flex items-center gap-2 text-lg">
+            {/* Conditionnel sticky pour écrans larges uniquement pour éviter les bugs scroll mobile */}
+            <Card className="border-0 shadow-sm bg-white lg:sticky lg:top-24">
+              <CardHeader className="border-b bg-[#0A2A5C] text-white rounded-t-xl p-4 md:p-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   <FileText className="h-5 w-5" /> 
                   Articles publiés ({blogPosts.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
+                <div className="divide-y max-h-[400px] lg:max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
                   {blogPosts.map(post => (
-                    <div key={post.id || post._id} className="p-5 hover:bg-slate-50 transition-colors group">
-                      <div className="flex justify-between items-start mb-3">
-                        <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-wider ${post.featured ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-slate-100 text-slate-600'}`}>
+                    <div key={post.id || post._id} className="p-4 md:p-5 hover:bg-slate-50 transition-colors group">
+                      <div className="flex justify-between items-start mb-2 md:mb-3 gap-2">
+                        <Badge variant="outline" className={`text-[9px] md:text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${post.featured ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-slate-100 text-slate-600'}`}>
                           {post.featured && <Star className="h-3 w-3 mr-1.5 fill-amber-500 text-amber-500" />}
                           {post.category || "Article"}
                         </Badge>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-100" onClick={() => handleEditClick(post)} title="Modifier">
-                            <Pencil className="h-4 w-4"/>
+                        <div className="flex gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-blue-600 hover:bg-blue-100" onClick={() => handleEditClick(post)} title="Modifier">
+                            <Pencil className="h-3 w-3 md:h-4 md:w-4"/>
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:bg-red-100" onClick={() => handleDeleteArticle(post.id || post._id, post.title)} title="Supprimer">
-                            <Trash2 className="h-4 w-4"/>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-red-500 hover:bg-red-100" onClick={() => handleDeleteArticle(post.id || post._id, post.title)} title="Supprimer">
+                            <Trash2 className="h-3 w-3 md:h-4 md:w-4"/>
                           </Button>
                         </div>
                       </div>
                       
-                      <p className="font-bold text-[#0A2A5C] text-base line-clamp-2 leading-snug mb-2 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={() => handleEditClick(post)}>
+                      <p className="font-bold text-[#0A2A5C] text-sm md:text-base line-clamp-2 leading-snug mb-2 group-hover:text-blue-600 transition-colors cursor-pointer" onClick={() => handleEditClick(post)}>
                         {post.title}
                       </p>
                       
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1.5 font-medium">
-                        <Calendar className="h-3.5 w-3.5 text-slate-400" /> 
+                      <p className="text-[10px] md:text-[11px] text-slate-500 flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-3 w-3 md:h-3.5 md:w-3.5 text-slate-400" /> 
                         {new Date(post.date || post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                   ))}
 
                   {blogPosts.length === 0 && (
-                    <div className="p-10 text-center text-slate-400">
-                      <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm font-medium">Aucun article publié.</p>
-                      <p className="text-xs mt-1">Vos articles apparaîtront ici.</p>
+                    <div className="p-8 md:p-10 text-center text-slate-400">
+                      <FileText className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-3 opacity-30" />
+                      <p className="text-xs md:text-sm font-medium">Aucun article publié.</p>
+                      <p className="text-[10px] md:text-xs mt-1">Vos articles apparaîtront ici.</p>
                     </div>
                   )}
                 </div>

@@ -62,6 +62,7 @@ const CheckoutPage = () => {
       await api.post('/orders', orderData);
 
       setIsSuccess(true);
+      window.scrollTo(0,0); // Remonte en haut pour voir le message de succès
       clearCart();
       toast.success("Commande enregistrée avec succès !");
     } catch (error) {
@@ -75,23 +76,23 @@ const CheckoutPage = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen pt-32 flex items-center justify-center bg-white px-4">
+      <div className="min-h-screen pt-24 md:pt-32 pb-16 flex items-center justify-center bg-slate-50 px-4">
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-center max-w-md"
+          className="text-center max-w-md bg-white p-6 md:p-10 rounded-[2rem] shadow-sm border border-slate-100"
         >
-          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="h-10 w-10" />
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+            <CheckCircle2 className="h-8 w-8 md:h-10 md:w-10" />
           </div>
-          <h1 className="text-3xl font-black text-[#0A2A5C] mb-4">Commande confirmée !</h1>
-          <p className="text-slate-500 mb-8">
+          <h1 className="text-2xl md:text-3xl font-black text-[#0A2A5C] mb-3 md:mb-4 leading-tight">Commande confirmée !</h1>
+          <p className="text-sm md:text-base text-slate-500 mb-6 md:mb-8 leading-relaxed">
             Merci {formData.name}. Un e-mail de confirmation a été envoyé à <strong>{formData.email}</strong>. 
             Le service logistique CALSED vous contactera sous peu.
           </p>
           <Button 
             onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")} 
-            className="bg-[#0A2A5C] rounded-xl w-full h-12 font-bold"
+            className="bg-[#0A2A5C] hover:bg-[#08224a] rounded-xl w-full h-12 md:h-14 font-bold text-sm md:text-base transition-colors"
           >
             {isAuthenticated ? "Suivre ma commande" : "Retour à l'accueil"}
           </Button>
@@ -101,37 +102,39 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-20 bg-slate-50">
-      <div className="container mx-auto px-4 lg:px-8">
-        <button onClick={() => navigate("/panier")} className="flex items-center text-slate-500 hover:text-[#0A2A5C] mb-6 transition-colors font-medium">
+    <div className="min-h-screen pt-20 md:pt-28 pb-16 md:pb-20 bg-slate-50/50">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl">
+        <button onClick={() => navigate("/panier")} className="flex items-center text-sm md:text-base text-slate-500 hover:text-[#0A2A5C] mb-4 md:mb-6 transition-colors font-medium">
           <ArrowLeft className="mr-2 h-4 w-4" /> Retour au panier
         </button>
 
-        <div className="grid lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-8">
+        <div className="grid lg:grid-cols-12 gap-6 md:gap-8 lg:gap-10">
+          
+          {/* COLONNE GAUCHE : FORMULAIRE */}
+          <div className="lg:col-span-8 space-y-6 md:space-y-8 order-1 lg:order-1">
             
             {/* SECTION IDENTITÉ */}
-            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden">
-              <CardHeader className="bg-white border-b p-8">
-                <CardTitle className="flex items-center gap-3 text-[#0A2A5C]">
-                  <UserIcon className="h-6 w-6 text-blue-600" /> Informations personnelles
+            <Card className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50/50 border-b p-5 md:p-8">
+                <CardTitle className="flex items-center gap-3 text-lg md:text-xl text-[#0A2A5C]">
+                  <UserIcon className="h-5 w-5 md:h-6 md:w-6 text-blue-600" /> Informations personnelles
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Nom complet</Label>
+              <CardContent className="p-5 md:p-8">
+                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="space-y-1.5 md:space-y-2">
+                    <Label className="text-xs md:text-sm font-bold text-slate-700">Nom complet <span className="text-red-500">*</span></Label>
                     <Input 
                       required
                       placeholder="Votre nom"
                       value={formData.name}
                       disabled={isAuthenticated}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className={isAuthenticated ? "bg-slate-100 cursor-not-allowed" : ""}
+                      className={`h-11 md:h-12 ${isAuthenticated ? "bg-slate-100 cursor-not-allowed" : "bg-white"}`}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Adresse E-mail</Label>
+                  <div className="space-y-1.5 md:space-y-2">
+                    <Label className="text-xs md:text-sm font-bold text-slate-700">Adresse E-mail <span className="text-red-500">*</span></Label>
                     <Input 
                       required
                       type="email"
@@ -139,7 +142,7 @@ const CheckoutPage = () => {
                       value={formData.email}
                       disabled={isAuthenticated}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className={isAuthenticated ? "bg-slate-100 cursor-not-allowed" : ""}
+                      className={`h-11 md:h-12 ${isAuthenticated ? "bg-slate-100 cursor-not-allowed" : "bg-white"}`}
                     />
                   </div>
                 </div>
@@ -147,16 +150,16 @@ const CheckoutPage = () => {
             </Card>
 
             {/* SECTION LIVRAISON */}
-            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden">
-              <CardHeader className="bg-white border-b p-8">
-                <CardTitle className="flex items-center gap-3 text-[#0A2A5C]">
-                  <Truck className="h-6 w-6 text-blue-600" /> Détails de livraison
+            <Card className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50/50 border-b p-5 md:p-8">
+                <CardTitle className="flex items-center gap-3 text-lg md:text-xl text-[#0A2A5C]">
+                  <Truck className="h-5 w-5 md:h-6 md:w-6 text-blue-600" /> Détails de livraison
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-8">
-                <form id="checkout-form" onSubmit={handleOrder} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label>Téléphone (Contact de livraison)</Label>
+              <CardContent className="p-5 md:p-8">
+                <form id="checkout-form" onSubmit={handleOrder} className="space-y-4 md:space-y-6">
+                  <div className="space-y-1.5 md:space-y-2">
+                    <Label className="text-xs md:text-sm font-bold text-slate-700">Téléphone (Contact livreur) <span className="text-red-500">*</span></Label>
                     <Input 
                       required 
                       type="tel"
@@ -165,25 +168,27 @@ const CheckoutPage = () => {
                       placeholder="Ex: 77 123 45 67" 
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="h-11 md:h-12 bg-white"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Adresse exacte (Quartier, Rue, Porte...)</Label>
+                  <div className="space-y-1.5 md:space-y-2">
+                    <Label className="text-xs md:text-sm font-bold text-slate-700">Adresse exacte (Quartier, Rue...) <span className="text-red-500">*</span></Label>
                     <Input 
                       required 
                       placeholder="Ex: Mermoz, Rue MZ 12, Immeuble X" 
                       value={formData.address}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      className="h-11 md:h-12 bg-white"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>Ville</Label>
-                      <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-1.5 md:space-y-2">
+                      <Label className="text-xs md:text-sm font-bold text-slate-700">Ville <span className="text-red-500">*</span></Label>
+                      <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="h-11 md:h-12 bg-white" />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Code Postal (Optionnel)</Label>
-                      <Input value={formData.postalCode} onChange={(e) => setFormData({...formData, postalCode: e.target.value})} />
+                    <div className="space-y-1.5 md:space-y-2">
+                      <Label className="text-xs md:text-sm font-bold text-slate-700">Code Postal (Optionnel)</Label>
+                      <Input value={formData.postalCode} onChange={(e) => setFormData({...formData, postalCode: e.target.value})} className="h-11 md:h-12 bg-white" />
                     </div>
                   </div>
                 </form>
@@ -191,64 +196,67 @@ const CheckoutPage = () => {
             </Card>
 
             {/* PAIEMENT */}
-            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden">
-              <CardHeader className="bg-white border-b p-8">
-                <CardTitle className="flex items-center gap-3 text-[#0A2A5C]">
-                  <CreditCard className="h-6 w-6 text-amber-500" /> Méthode de règlement
+            <Card className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50/50 border-b p-5 md:p-8">
+                <CardTitle className="flex items-center gap-3 text-lg md:text-xl text-[#0A2A5C]">
+                  <CreditCard className="h-5 w-5 md:h-6 md:w-6 text-amber-500" /> Méthode de règlement
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-8">
-                <div className="p-5 border-2 border-amber-400 bg-amber-50/50 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-amber-100">
-                      <Truck className="h-6 w-6 text-amber-600" />
+              <CardContent className="p-5 md:p-8">
+                <div className="p-4 md:p-5 border-2 border-amber-400 bg-amber-50/50 rounded-xl md:rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="h-10 w-10 md:h-12 md:w-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-amber-100 shrink-0">
+                      <Truck className="h-5 w-5 md:h-6 md:w-6 text-amber-600" />
                     </div>
                     <div>
-                      <p className="font-bold text-[#0A2A5C]">Paiement à la réception</p>
-                      <p className="text-xs text-amber-700">Espèces ou transfert (OM/Wave) lors de la livraison</p>
+                      <p className="font-bold text-sm md:text-base text-[#0A2A5C]">Paiement à la réception</p>
+                      <p className="text-[10px] md:text-xs text-amber-700 mt-0.5 leading-snug">Espèces ou transfert (OM/Wave) lors de la livraison</p>
                     </div>
                   </div>
-                  <div className="h-6 w-6 rounded-full border-4 border-amber-500 bg-white shadow-inner"></div>
+                  <div className="h-5 w-5 md:h-6 md:w-6 rounded-full border-[3px] md:border-4 border-amber-500 bg-white shadow-inner shrink-0 ml-2"></div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* RÉCAPITULATIF */}
-          <div className="space-y-6">
-            <Card className="border-0 shadow-xl rounded-[2.5rem] bg-white overflow-hidden sticky top-32 border-t-8 border-[#0A2A5C]">
-              <div className="p-8 pb-4">
-                <h2 className="text-xl font-bold text-[#0A2A5C]">Votre commande</h2>
+          {/* COLONNE DROITE : RÉCAPITULATIF */}
+          <div className="lg:col-span-4 space-y-6 order-2 lg:order-2">
+            <Card className="border-0 shadow-xl rounded-2xl md:rounded-[2.5rem] bg-white overflow-hidden lg:sticky lg:top-24 border-t-[6px] md:border-t-8 border-[#0A2A5C]">
+              <div className="p-5 md:p-8 pb-3 md:pb-4 border-b border-slate-50">
+                <h2 className="text-lg md:text-xl font-bold text-[#0A2A5C]">Votre commande</h2>
               </div>
-              <CardContent className="p-8 pt-0 space-y-4">
-                <div className="max-h-60 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+              <CardContent className="p-5 md:p-8 pt-4 md:pt-6 space-y-4">
+                <div className="max-h-48 md:max-h-60 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                   {cart.map(item => (
-                    <div key={item._id || item.id} className="flex justify-between text-sm">
-                      <span className="text-slate-500 truncate mr-4">{item.quantity}x {item.name}</span>
+                    <div key={item._id || item.id} className="flex justify-between text-xs md:text-sm">
+                      <span className="text-slate-500 truncate mr-3">{item.quantity}x {item.name}</span>
                       <span className="font-bold text-slate-700 shrink-0">{(item.price * item.quantity).toLocaleString()} FCFA</span>
                     </div>
                   ))}
                 </div>
-                <Separator className="my-4" />
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-slate-500">
+                
+                <Separator className="bg-slate-100 my-4" />
+                
+                <div className="space-y-2 md:space-y-3">
+                  <div className="flex justify-between text-xs md:text-sm text-slate-500 font-medium">
                     <span>Articles</span>
                     <span>{getCartTotal().toLocaleString()} FCFA</span>
                   </div>
-                  <div className="flex justify-between text-sm text-slate-500">
+                  <div className="flex justify-between text-xs md:text-sm text-slate-500 font-medium">
                     <span>Livraison (Dakar)</span>
                     <span>2,000 FCFA</span>
                   </div>
-                  <div className="flex justify-between items-end pt-4">
-                    <span className="text-sm font-bold text-[#0A2A5C] uppercase tracking-wider">Total TTC</span>
-                    <span className="text-3xl font-black text-[#0A2A5C]">{total.toLocaleString()} FCFA</span>
+                  <div className="flex justify-between items-end pt-3 md:pt-4 border-t border-slate-50 mt-2">
+                    <span className="text-xs md:text-sm font-bold text-[#0A2A5C] uppercase tracking-wider">Total TTC</span>
+                    <span className="text-2xl md:text-3xl font-black text-[#0A2A5C]">{total.toLocaleString()} FCFA</span>
                   </div>
                 </div>
+                
                 <Button 
                   form="checkout-form"
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full h-16 bg-amber-400 hover:bg-amber-500 text-[#0A2A5C] rounded-2xl text-lg font-black mt-6 shadow-lg shadow-amber-200 transition-all hover:-translate-y-1"
+                  className="w-full h-14 md:h-16 bg-amber-400 hover:bg-amber-500 text-[#0A2A5C] rounded-xl md:rounded-2xl text-base md:text-lg font-black mt-6 shadow-lg shadow-amber-200/50 transition-all hover:-translate-y-1 active:scale-[0.98]"
                 >
                   {isProcessing ? (
                     <div className="flex items-center gap-2">
@@ -259,12 +267,13 @@ const CheckoutPage = () => {
                     "Valider mon achat"
                   )}
                 </Button>
-                <p className="text-[10px] text-center text-slate-400 mt-4 font-medium uppercase tracking-widest">
-                  Transaction sécurisée par CALSED
+                <p className="text-[9px] md:text-[10px] text-center text-slate-400 mt-4 md:mt-5 font-medium uppercase tracking-widest flex justify-center items-center gap-1.5">
+                   <Lock className="h-3 w-3" /> Transaction sécurisée par CALSED
                 </p>
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>

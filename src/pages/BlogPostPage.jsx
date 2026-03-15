@@ -84,12 +84,12 @@ const BlogPostPage = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="bg-white p-8 rounded-3xl shadow-sm text-center">
-          <FileText className="h-16 w-16 mx-auto text-slate-200 mb-4" />
-          <h1 className="text-2xl font-bold text-[#0A2A5C] mb-2">Article introuvable</h1>
-          <p className="text-slate-500 mb-6">Cette publication n'existe plus ou a été déplacée.</p>
-          <Link to="/blog"><Button className="bg-[#0A2A5C] rounded-full px-8">Retour au journal</Button></Link>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
+        <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-sm text-center w-full max-w-md">
+          <FileText className="h-12 w-12 md:h-16 md:w-16 mx-auto text-slate-200 mb-4" />
+          <h1 className="text-xl md:text-2xl font-bold text-[#0A2A5C] mb-2">Article introuvable</h1>
+          <p className="text-sm md:text-base text-slate-500 mb-6">Cette publication n'existe plus ou a été déplacée.</p>
+          <Link to="/blog"><Button className="bg-[#0A2A5C] rounded-full px-6 md:px-8 w-full sm:w-auto">Retour au journal</Button></Link>
         </div>
       </div>
     );
@@ -178,53 +178,57 @@ const BlogPostPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pt-24 pb-20">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pt-20 md:pt-24 pb-16 md:pb-20">
       
-      <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
-        <div className="mb-8">
-          <Link to="/blog" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-[#0A2A5C] transition-colors mb-6 group">
-            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Retour au journal
+      {/* HEADER ARTICLE */}
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-5xl">
+        <div className="mb-6 md:mb-8">
+          <Link to="/blog" className="inline-flex items-center text-xs md:text-sm font-medium text-slate-500 hover:text-[#0A2A5C] transition-colors mb-4 md:mb-6 group">
+            <ArrowLeft className="mr-2 h-3 w-3 md:h-4 md:w-4 group-hover:-translate-x-1 transition-transform" /> Retour au journal
           </Link>
           
-          <div className="flex items-center gap-3 mb-6">
-            <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 px-3 py-1 font-bold tracking-wide uppercase text-[10px]">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-6">
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 px-2 py-0.5 md:px-3 md:py-1 font-bold tracking-wide uppercase text-[9px] md:text-[10px]">
               {post.category}
             </Badge>
-            <span className="text-slate-300 text-sm">•</span>
-            <span className="text-slate-500 text-sm font-medium flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" /> {formattedDate}
+            <span className="text-slate-300 text-sm hidden sm:inline">•</span>
+            <span className="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-1">
+              <Calendar className="h-3 w-3 md:h-3.5 md:w-3.5" /> {formattedDate}
             </span>
             {post.readTime && (
               <>
-                <span className="text-slate-300 text-sm">•</span>
-                <span className="text-slate-500 text-sm font-medium flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> {post.readTime}
+                <span className="text-slate-300 text-sm hidden sm:inline">•</span>
+                <span className="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-1 ml-2 sm:ml-0">
+                  <Clock className="h-3 w-3 md:h-3.5 md:w-3.5" /> {post.readTime}
                 </span>
               </>
             )}
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black font-display text-[#0A2A5C] leading-[1.1] mb-8 max-w-4xl">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-display text-[#0A2A5C] leading-tight md:leading-[1.1] mb-6 md:mb-8 max-w-4xl">
             {post.title}
           </h1>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 lg:px-8 max-w-6xl mb-16">
-        <div className="relative aspect-video w-full overflow-hidden rounded-[2rem] shadow-xl">
+      {/* IMAGE DE COUVERTURE */}
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl mb-8 md:mb-16">
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl md:rounded-[2rem] shadow-lg md:shadow-xl">
           {post.image ? (
             <img src={getImageUrl(post.image)} alt={post.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-[#0A2A5C] flex items-center justify-center">
-              <FileText className="h-20 w-20 text-white/20" />
+              <FileText className="h-16 w-16 md:h-20 md:w-20 text-white/20" />
             </div>
           )}
         </div>
       </div>
 
-      <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      {/* CONTENU PRINCIPAL & BARRE LATERALE */}
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-5xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
           
+          {/* BARRE LATERALE (Desktop uniquement) */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-32 flex flex-col gap-6 items-center">
               <div className="flex flex-col gap-3 p-2 bg-white shadow-lg rounded-full border border-slate-100 items-center">
@@ -285,97 +289,106 @@ const BlogPostPage = () => {
           </div>
 
           <div className="lg:col-span-10 lg:col-start-3">
-           {/* L'encapsulation ReactQuill CORRIGÉE : Lecture fluide sans coupures de mots agressives */}
+           {/* L'encapsulation ReactQuill CORRIGÉE */}
             <div 
-              className="prose prose-lg prose-slate mx-auto max-w-3xl
+              className="prose prose-base md:prose-lg prose-slate mx-auto max-w-3xl
               [overflow-wrap:anywhere] [hyphens:none]
               prose-headings:font-display prose-headings:text-[#0A2A5C] prose-headings:font-bold
-              prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-lg prose-p:text-justify
+              prose-p:text-slate-600 prose-p:leading-relaxed md:prose-p:text-lg prose-p:text-justify
               prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline
-              prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
-              prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
+              prose-img:rounded-xl md:prose-img:rounded-3xl prose-img:shadow-lg prose-img:mx-auto
+              prose-blockquote:border-l-amber-400 prose-blockquote:bg-amber-50/30 prose-blockquote:py-2 prose-blockquote:px-4 md:prose-blockquote:px-6 prose-blockquote:rounded-r-lg"
               dangerouslySetInnerHTML={{ __html: post.content || post.excerpt }} 
             />
 
-            <div className="mt-16 pt-8 border-t border-slate-100">
-              <p className="text-sm font-bold text-slate-900 mb-3">Sujets abordés :</p>
+            {/* TAGS */}
+            <div className="mt-10 md:mt-16 pt-6 md:pt-8 border-t border-slate-100">
+              <p className="text-xs md:text-sm font-bold text-slate-900 mb-3">Sujets abordés :</p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="text-slate-500 border-slate-200 hover:border-[#0A2A5C] hover:text-[#0A2A5C] transition-colors cursor-pointer">#CALSED</Badge>
-                <Badge variant="outline" className="text-slate-500 border-slate-200 hover:border-[#0A2A5C] hover:text-[#0A2A5C] transition-colors cursor-pointer">#{post.category}</Badge>
+                <Badge variant="outline" className="text-[10px] md:text-xs text-slate-500 border-slate-200 hover:border-[#0A2A5C] hover:text-[#0A2A5C] transition-colors cursor-pointer">#CALSED</Badge>
+                <Badge variant="outline" className="text-[10px] md:text-xs text-slate-500 border-slate-200 hover:border-[#0A2A5C] hover:text-[#0A2A5C] transition-colors cursor-pointer">#{post.category}</Badge>
               </div>
             </div>
 
-            <div className="lg:hidden mt-12 flex flex-col gap-4">
+            {/* ACTIONS MOBILE (Like / Partage en bas de l'article sur mobile) */}
+            <div className="lg:hidden mt-8 md:mt-12 flex flex-col gap-3 md:gap-4">
                <Button 
                  onClick={handleLike} 
-                 className={`w-full rounded-xl h-14 text-lg font-bold shadow-lg ${
+                 className={`w-full rounded-xl h-12 md:h-14 text-base md:text-lg font-bold shadow-md md:shadow-lg ${
                    isLiked 
                    ? 'bg-red-500 hover:bg-red-600 text-white' 
                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                  }`}
                >
-                  <Heart className={`mr-2 h-6 w-6 ${isLiked ? "fill-current" : ""}`} /> 
-                  {isLiked ? "Vous avez aimé" : "J'aime cet article"}
+                 <Heart className={`mr-2 h-5 w-5 md:h-6 md:w-6 ${isLiked ? "fill-current" : ""}`} /> 
+                 {isLiked ? "Vous avez aimé" : "J'aime cet article"}
                </Button>
                
                <div className="grid grid-cols-4 gap-2">
-                 <Button variant="outline" onClick={() => handleShare('facebook')} className="h-12 rounded-xl"><Facebook className="h-5 w-5 text-blue-600"/></Button>
-                 <Button variant="outline" onClick={() => handleShare('twitter')} className="h-12 rounded-xl"><Twitter className="h-5 w-5 text-sky-500"/></Button>
-                 <Button variant="outline" onClick={() => handleShare('linkedin')} className="h-12 rounded-xl"><Linkedin className="h-5 w-5 text-blue-700"/></Button>
-                 <Button variant="outline" onClick={() => handleShare('copy')} className="h-12 rounded-xl"><Link2 className="h-5 w-5 text-slate-600"/></Button>
+                 <Button variant="outline" onClick={() => handleShare('facebook')} className="h-12 rounded-xl"><Facebook className="h-4 w-4 md:h-5 md:w-5 text-blue-600"/></Button>
+                 <Button variant="outline" onClick={() => handleShare('twitter')} className="h-12 rounded-xl"><Twitter className="h-4 w-4 md:h-5 md:w-5 text-sky-500"/></Button>
+                 <Button variant="outline" onClick={() => handleShare('linkedin')} className="h-12 rounded-xl"><Linkedin className="h-4 w-4 md:h-5 md:w-5 text-blue-700"/></Button>
+                 <Button variant="outline" onClick={() => handleShare('copy')} className="h-12 rounded-xl"><Link2 className="h-4 w-4 md:h-5 md:w-5 text-slate-600"/></Button>
                </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-50 py-20 mt-20 border-t border-slate-200">
+      {/* SECTION COMMENTAIRES */}
+      <div className="bg-slate-50 py-12 md:py-20 mt-10 md:mt-20 border-t border-slate-200">
         <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-          <div className="flex items-center gap-4 mb-10">
-            <h3 className="text-2xl font-bold text-[#0A2A5C]">Discussion</h3>
-            <Badge variant="secondary" className="bg-white border border-slate-200 text-slate-600 rounded-full px-3">{allComments.length}</Badge>
+          <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-10">
+            <h3 className="text-xl md:text-2xl font-bold text-[#0A2A5C]">Discussion</h3>
+            <Badge variant="secondary" className="bg-white border border-slate-200 text-slate-600 rounded-full px-2 md:px-3">{allComments.length}</Badge>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 mb-12">
+          {/* Formulaire Commentaire */}
+          <div className="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 p-4 md:p-8 mb-8 md:mb-12">
             <form onSubmit={handleSubmitComment} className="relative">
               <Textarea
                 placeholder={isAuthenticated ? "Partagez votre avis..." : "Connectez-vous pour rejoindre la discussion."}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="bg-slate-50 border-0 rounded-xl min-h-[100px] p-4 text-base focus-visible:ring-1 focus-visible:ring-[#0A2A5C] resize-none"
+                className="bg-slate-50 border-0 rounded-xl min-h-[80px] md:min-h-[100px] p-3 md:p-4 text-sm md:text-base focus-visible:ring-1 focus-visible:ring-[#0A2A5C] resize-none"
                 disabled={!isAuthenticated || isSubmitting}
               />
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-xs text-slate-400 hidden sm:block">Soyez respectueux et constructif.</p>
+              <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center mt-4 gap-3 sm:gap-0">
+                <p className="text-[10px] md:text-xs text-slate-400 hidden sm:block">Soyez respectueux et constructif.</p>
                 {isAuthenticated ? (
-                  <Button type="submit" disabled={isSubmitting || !newComment.trim()} className="bg-[#0A2A5C] text-white hover:bg-blue-900 rounded-full px-6">
+                  <Button type="submit" disabled={isSubmitting || !newComment.trim()} className="bg-[#0A2A5C] text-white hover:bg-blue-900 rounded-full px-6 w-full sm:w-auto h-10 md:h-10">
                     {isSubmitting ? "Envoi..." : "Publier"} <Send className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 ) : (
-                  <Link to="/connexion"><Button type="button" variant="outline" className="border-slate-200 rounded-full text-slate-600"><Lock className="mr-2 h-3.5 w-3.5" /> Se connecter</Button></Link>
+                  <Link to="/connexion" className="w-full sm:w-auto">
+                    <Button type="button" variant="outline" className="border-slate-200 rounded-full text-slate-600 w-full h-10 md:h-10">
+                      <Lock className="mr-2 h-3.5 w-3.5" /> Se connecter
+                    </Button>
+                  </Link>
                 )}
               </div>
             </form>
           </div>
 
-          <div className="space-y-8">
+          {/* Liste des Commentaires */}
+          <div className="space-y-4 md:space-y-8">
             <AnimatePresence>
               {displayedComments.map((comment) => (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} key={comment._id} className="group">
-                  <div className="flex gap-4">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center text-amber-800 font-bold text-sm shrink-0 border-2 border-white shadow-sm">
+                  <div className="flex gap-3 md:gap-4">
+                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center text-amber-800 font-bold text-xs md:text-sm shrink-0 border-2 border-white shadow-sm mt-1">
                       {comment.author?.[0].toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <div className="bg-white p-5 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 relative">
-                        <div className="flex justify-between items-start mb-2">
+                      <div className="bg-white p-4 md:p-5 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 relative">
+                        <div className="flex justify-between items-start mb-1 md:mb-2">
                           <div>
-                            <span className="font-bold text-slate-900 text-sm block">{comment.author}</span>
-                            <span className="text-[10px] text-slate-400">{new Date(comment.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            <span className="font-bold text-slate-900 text-xs md:text-sm block">{comment.author}</span>
+                            <span className="text-[9px] md:text-[10px] text-slate-400">{new Date(comment.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                           </div>
                           {isAuthenticated && (comment.authorId === (user?._id || user?.id) || user?.role === 'admin') && (
-                            <button onClick={() => handleDeleteComment(comment._id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                              <Trash2 className="h-4 w-4" />
+                            <button onClick={() => handleDeleteComment(comment._id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 md:p-0">
+                              <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                             </button>
                           )}
                         </div>
@@ -388,36 +401,37 @@ const BlogPostPage = () => {
             </AnimatePresence>
 
             {hasMore && (
-              <div className="text-center pt-6">
-                <Button variant="ghost" onClick={() => setVisibleCount(prev => prev + 5)} className="text-slate-500 hover:text-[#0A2A5C] hover:bg-transparent font-medium">
-                  Voir plus de commentaires <ChevronDown className="ml-1 h-4 w-4" />
+              <div className="text-center pt-4 md:pt-6">
+                <Button variant="ghost" onClick={() => setVisibleCount(prev => prev + 5)} className="text-slate-500 hover:text-[#0A2A5C] hover:bg-transparent font-medium text-xs md:text-sm">
+                  Voir plus de commentaires <ChevronDown className="ml-1 h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               </div>
             )}
 
             {allComments.length === 0 && (
-              <div className="text-center py-10 opacity-50">
-                <MessageCircle className="h-10 w-10 mx-auto mb-2 text-slate-300" />
-                <p>Aucun commentaire.</p>
+              <div className="text-center py-6 md:py-10 opacity-50">
+                <MessageCircle className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 text-slate-300" />
+                <p className="text-xs md:text-sm">Aucun commentaire.</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
+      {/* ARTICLES LIÉS */}
       {relatedPosts.length > 0 && (
-        <div className="container mx-auto px-4 lg:px-8 max-w-6xl mt-20 pt-10 border-t border-slate-100">
-          <h3 className="text-xl font-bold text-[#0A2A5C] mb-8">À lire aussi</h3>
-          <div className="grid md:grid-cols-2 gap-8">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl mt-10 md:mt-20 pt-8 md:pt-10 border-t border-slate-100">
+          <h3 className="text-lg md:text-xl font-bold text-[#0A2A5C] mb-6 md:mb-8">À lire aussi</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
             {relatedPosts.map((relatedPost) => (
-              <Link key={relatedPost._id || relatedPost.id} to={`/blog/${relatedPost._id || relatedPost.id}`} className="group flex gap-6 items-start">
-                <div className="w-32 h-24 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+              <Link key={relatedPost._id || relatedPost.id} to={`/blog/${relatedPost._id || relatedPost.id}`} className="group flex gap-4 md:gap-6 items-start bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none">
+                <div className="w-24 h-24 md:w-32 md:h-24 rounded-lg md:rounded-xl bg-slate-100 overflow-hidden shrink-0">
                   {relatedPost.image && <img src={getImageUrl(relatedPost.image)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
                 </div>
-                <div>
-                  <Badge variant="outline" className="mb-2 text-[10px] border-slate-200 text-slate-500">{relatedPost.category}</Badge>
-                  <h4 className="font-bold text-slate-900 group-hover:text-[#0A2A5C] transition-colors leading-snug mb-1 line-clamp-2">{relatedPost.title}</h4>
-                  <p className="text-xs text-slate-400">Lecture : 5 min</p>
+                <div className="flex-1 min-w-0">
+                  <Badge variant="outline" className="mb-1 md:mb-2 text-[9px] md:text-[10px] border-slate-200 text-slate-500 px-2 py-0">{relatedPost.category}</Badge>
+                  <h4 className="font-bold text-sm md:text-base text-slate-900 group-hover:text-[#0A2A5C] transition-colors leading-snug mb-1 line-clamp-2 md:line-clamp-2">{relatedPost.title}</h4>
+                  <p className="text-[10px] md:text-xs text-slate-400 hidden sm:block">Lecture : {relatedPost.readTime || '5 min'}</p>
                 </div>
               </Link>
             ))}

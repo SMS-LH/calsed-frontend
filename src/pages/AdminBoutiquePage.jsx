@@ -51,7 +51,6 @@ const AdminBoutiquePage = () => {
       toast.success("Image téléchargée !", { id: toastId });
       const imageUrl = typeof data === 'string' ? data : data.url;
       
-      // Gestion de plusieurs images (séparées par des virgules si besoin)
       const currentImages = newProduct.image ? newProduct.image + ", " : "";
       setNewProduct(prev => ({ ...prev, image: currentImages + imageUrl }));
     } catch (error) {
@@ -68,26 +67,20 @@ const AdminBoutiquePage = () => {
 
     const toastId = toast.loading(editingProductId ? "Mise à jour..." : "Enregistrement...");
     
-    // Formatage des données
     const productData = { 
       ...newProduct, 
       price: Number(newProduct.price), 
       stock: Number(newProduct.stock), 
-      // S'assure que l'image est un tableau si ton backend l'attend ainsi
       image: newProduct.image ? newProduct.image.split(",").map(s => s.trim()) : []
     };
 
     try {
-      // Si tu as une fonction updateProduct dans ton ContentContext, utilise-la ici.
-      // Sinon, on fait une requête directe ou on supprime puis on recrée pour simuler la modif (selon ton backend)
       let success = false;
       
       if (editingProductId) {
-         // Si ton backend supporte PUT /products/:id
          await api.put(`/products/${editingProductId}`, productData);
          success = true;
-         // Note: il faudra peut-être rafraîchir la liste manuellement ici via une fonction fetchProducts()
-         window.location.reload(); // Solution rapide si fetchProducts n'est pas exporté
+         window.location.reload(); 
       } else {
          success = await addProduct(productData);
       }
@@ -120,9 +113,9 @@ const AdminBoutiquePage = () => {
       stock: product.stock,
       category: product.category || "Vêtement",
       description: product.description || "",
-      // Reconvertir le tableau d'images en chaîne pour l'input text
       image: Array.isArray(product.image) ? product.image.join(", ") : (product.image || "")
     });
+    // On scrolle vers le formulaire, utile surtout sur mobile
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -131,7 +124,6 @@ const AdminBoutiquePage = () => {
     setNewProduct(defaultProduct);
   };
 
-  // Extraire la première image pour l'affichage
   const getFirstImage = (imageField) => {
     if (!imageField) return null;
     if (Array.isArray(imageField)) return imageField[0];
@@ -139,47 +131,51 @@ const AdminBoutiquePage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-slate-50/50">
-      <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
+    <div className="min-h-screen pt-20 md:pt-24 pb-20 bg-slate-50/50">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
         
         {/* EN-TÊTE ET NAVIGATION */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-4 text-slate-500 hover:text-[#0A2A5C]">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Retour au Dashboard
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+          <div className="w-full md:w-auto">
+            <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-2 -ml-2 md:-ml-4 text-slate-500 hover:text-[#0A2A5C] px-2 md:px-4">
+              <ArrowLeft className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Retour au Dashboard</span><span className="sm:inline hidden"></span>
             </Button>
-            <h1 className="text-3xl font-bold font-display text-[#0A2A5C] flex items-center gap-3">
-              <Store className="h-8 w-8 text-amber-600" /> Gestion de la Boutique
+            <h1 className="text-2xl md:text-3xl font-bold font-display text-[#0A2A5C] flex items-center gap-2 md:gap-3">
+              <Store className="h-6 w-6 md:h-8 md:w-8 text-amber-600" /> Gestion Boutique
             </h1>
           </div>
-          <Button onClick={() => {handleCancelEdit(); window.scrollTo({ top: 0, behavior: 'smooth' });}} className="bg-amber-600 hover:bg-amber-700 text-white">
+          <Button 
+            onClick={() => {handleCancelEdit(); window.scrollTo({ top: 0, behavior: 'smooth' });}} 
+            className="w-full md:w-auto bg-amber-600 hover:bg-amber-700 text-white h-12 md:h-10"
+          >
             <Plus className="h-4 w-4 mr-2" /> Nouveau Produit
           </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 items-start">
+        <div className="grid lg:grid-cols-3 gap-6 md:gap-8 items-start flex-col-reverse lg:flex-row flex">
           
-          {/* COLONNE GAUCHE : FORMULAIRE */}
-          <div className="lg:col-span-1">
-            <Card className="border-0 shadow-sm bg-white sticky top-24">
-              <CardHeader className={`${editingProductId ? 'bg-blue-600' : 'bg-[#0A2A5C]'} text-white rounded-t-xl`}>
-                <CardTitle className="flex items-center gap-2 text-lg">
+          {/* COLONNE GAUCHE : FORMULAIRE (Ordre 1 sur Desktop, Ordre 2 sur Mobile) */}
+          <div className="lg:col-span-1 w-full order-1 lg:order-1">
+            <Card className="border-0 shadow-sm bg-white lg:sticky lg:top-24">
+              <CardHeader className={`${editingProductId ? 'bg-blue-600' : 'bg-[#0A2A5C]'} text-white rounded-t-xl p-4 md:p-6`}>
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   {editingProductId ? <Pencil className="h-5 w-5"/> : <ShoppingBag className="h-5 w-5"/>}
                   {editingProductId ? "Modifier le produit" : "Ajouter au catalogue"}
                 </CardTitle>
               </CardHeader>
               
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 md:p-6 space-y-4">
                 <div className="space-y-2">
                   <Label>Nom du produit <span className="text-red-500">*</span></Label>
                   <Input 
                     placeholder="Ex: T-Shirt CALSED..." 
                     value={newProduct.name} 
                     onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} 
+                    className="h-10 md:h-10"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
                   <div className="space-y-2">
                     <Label>Prix (FCFA) <span className="text-red-500">*</span></Label>
                     <Input 
@@ -187,6 +183,7 @@ const AdminBoutiquePage = () => {
                       placeholder="Ex: 5000" 
                       value={newProduct.price} 
                       onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} 
+                      className="h-10 md:h-10"
                     />
                   </div>
                   <div className="space-y-2">
@@ -196,6 +193,7 @@ const AdminBoutiquePage = () => {
                       placeholder="Quantité" 
                       value={newProduct.stock} 
                       onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} 
+                      className="h-10 md:h-10"
                     />
                   </div>
                 </div>
@@ -203,7 +201,7 @@ const AdminBoutiquePage = () => {
                 <div className="space-y-2">
                   <Label>Catégorie</Label>
                   <Select value={newProduct.category} onValueChange={(val) => setNewProduct({...newProduct, category: val})}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 md:h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -220,34 +218,34 @@ const AdminBoutiquePage = () => {
                     placeholder="Décrivez le produit..." 
                     value={newProduct.description} 
                     onChange={(e) => setNewProduct({...newProduct, description: e.target.value})} 
-                    className="h-24 resize-none"
+                    className="h-20 md:h-24 resize-none text-sm"
                   />
                 </div>
 
-                <div className="space-y-2 border-t pt-4">
+                <div className="space-y-2 border-t pt-4 mt-2">
                   <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4 text-slate-400"/> Image(s) du produit</Label>
                   {getFirstImage(newProduct.image) && (
-                    <div className="h-32 w-full rounded-md overflow-hidden border mb-2 bg-slate-50">
+                    <div className="h-24 md:h-32 w-full rounded-md overflow-hidden border mb-2 bg-slate-50">
                       <img src={getFirstImage(newProduct.image)} alt="Aperçu" className="h-full w-full object-contain" />
                     </div>
                   )}
-                  <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} className="text-xs cursor-pointer"/>
+                  <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} className="text-xs cursor-pointer h-9 md:h-10"/>
                   <Textarea 
-                    placeholder="Ou collez les URLs des images (séparées par des virgules)..." 
+                    placeholder="Ou collez les URLs (séparées par des virgules)..." 
                     value={newProduct.image} 
                     onChange={(e) => setNewProduct({...newProduct, image: e.target.value})} 
-                    className="text-xs h-16" 
+                    className="text-xs h-14 md:h-16" 
                   />
                 </div>
               </CardContent>
 
-              <CardFooter className="p-6 bg-slate-50 border-t flex flex-col gap-2">
-                <Button onClick={handleSaveProduct} disabled={uploading || !newProduct.name || !newProduct.price} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+              <CardFooter className="p-4 md:p-6 bg-slate-50 border-t flex flex-col gap-2 md:gap-3">
+                <Button onClick={handleSaveProduct} disabled={uploading || !newProduct.name || !newProduct.price} className="w-full bg-amber-600 hover:bg-amber-700 text-white h-12 md:h-10">
                   {uploading ? <Loader2 className="animate-spin h-4 w-4 mr-2"/> : <CheckCircle className="h-4 w-4 mr-2"/>}
                   {editingProductId ? "Mettre à jour" : "Ajouter au catalogue"}
                 </Button>
                 {editingProductId && (
-                  <Button variant="outline" onClick={handleCancelEdit} className="w-full">
+                  <Button variant="outline" onClick={handleCancelEdit} className="w-full h-12 md:h-10">
                     Annuler
                   </Button>
                 )}
@@ -255,34 +253,34 @@ const AdminBoutiquePage = () => {
             </Card>
           </div>
 
-          {/* COLONNE DROITE : LE CATALOGUE */}
-          <div className="lg:col-span-2">
+          {/* COLONNE DROITE : LE CATALOGUE (Ordre 2 sur Desktop, Ordre 1 sur Mobile) */}
+          <div className="lg:col-span-2 w-full order-2 lg:order-2">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#0A2A5C] flex items-center gap-2">
-                <Package className="h-5 w-5" /> Produits en ligne ({products.length})
+              <h2 className="text-lg md:text-xl font-bold text-[#0A2A5C] flex items-center gap-2">
+                <Package className="h-4 w-4 md:h-5 md:w-5" /> Produits en ligne ({products.length})
               </h2>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               {products.map(product => {
                 const stock = Number(product.stock) || 0;
                 const outOfStock = stock <= 0;
 
                 return (
                   <Card key={product.id || product._id} className={`border-0 shadow-sm overflow-hidden group ${outOfStock ? 'opacity-75' : ''}`}>
-                    <div className="flex p-4 gap-4 h-full">
+                    <div className="flex p-3 md:p-4 gap-3 md:gap-4 h-full">
                       {/* Image Thumbnail */}
-                      <div className="h-24 w-24 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden relative border border-slate-200">
+                      <div className="h-20 w-20 md:h-24 md:w-24 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden relative border border-slate-200">
                         {product.image ? (
                           <img src={getFirstImage(product.image)} alt={product.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-slate-300">
-                            <ImageIcon className="h-8 w-8" />
+                            <ImageIcon className="h-6 w-6 md:h-8 md:w-8" />
                           </div>
                         )}
                         {outOfStock && (
                           <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
-                            <Badge variant="destructive" className="text-[10px] uppercase">Rupture</Badge>
+                            <Badge variant="destructive" className="text-[9px] md:text-[10px] uppercase">Rupture</Badge>
                           </div>
                         )}
                       </div>
@@ -294,24 +292,24 @@ const AdminBoutiquePage = () => {
                             <h3 className="font-bold text-[#0A2A5C] text-sm leading-tight mb-1 pr-2 line-clamp-2" title={product.name}>
                               {product.name}
                             </h3>
-                            {/* Actions rapides invisibles sauf au hover (sur desktop) */}
-                            <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-blue-600 hover:bg-blue-50" onClick={() => handleEditClick(product)}>
+                            {/* Actions rapides (Toujours visibles sur mobile, hover sur desktop) */}
+                            <div className="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
+                              <Button size="icon" variant="ghost" className="h-6 w-6 md:h-7 md:w-7 text-blue-600 hover:bg-blue-50" onClick={() => handleEditClick(product)}>
                                 <Pencil className="h-3 w-3"/>
                               </Button>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-red-500 hover:bg-red-50" onClick={() => handleDeleteProduct(product.id || product._id, product.name)}>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 md:h-7 md:w-7 text-red-500 hover:bg-red-50" onClick={() => handleDeleteProduct(product.id || product._id, product.name)}>
                                 <Trash2 className="h-3 w-3"/>
                               </Button>
                             </div>
                           </div>
                           
-                          <p className="text-[11px] text-slate-500 flex items-center gap-1 mb-2">
+                          <p className="text-[10px] md:text-[11px] text-slate-500 flex items-center gap-1 mb-1 md:mb-2">
                             <Tag className="h-3 w-3" /> {product.category || 'Vêtement'}
                           </p>
                         </div>
 
-                        <div className="flex items-end justify-between mt-auto">
-                          <p className="font-black text-amber-600 text-lg">
+                        <div className="flex items-end justify-between mt-auto pt-1">
+                          <p className="font-black text-amber-600 text-base md:text-lg leading-none">
                             {Number(product.price).toLocaleString()} F
                           </p>
                           {!outOfStock && (
@@ -327,10 +325,10 @@ const AdminBoutiquePage = () => {
               })}
 
               {products.length === 0 && (
-                <div className="col-span-full py-16 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
-                  <ShoppingBag className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-base font-medium text-slate-500">Votre boutique est vide.</p>
-                  <p className="text-sm">Ajoutez votre premier produit en utilisant le formulaire.</p>
+                <div className="col-span-full py-12 md:py-16 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
+                  <ShoppingBag className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-2 md:mb-3 opacity-50" />
+                  <p className="text-sm md:text-base font-medium text-slate-500">Votre boutique est vide.</p>
+                  <p className="text-xs md:text-sm">Ajoutez votre premier produit en utilisant le formulaire.</p>
                 </div>
               )}
             </div>
