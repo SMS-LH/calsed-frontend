@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,20 +9,32 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { CreditCard, Truck, CheckCircle2, ArrowLeft, Loader2, User as UserIcon, Mail } from "lucide-react";
+import { 
+  CreditCard, 
+  Truck, 
+  CheckCircle2, 
+  ArrowLeft, 
+  Loader2, 
+  User as UserIcon, 
+  Mail, 
+  Lock // Ajout de l'import manquant qui causait l'écran blanc
+} from "lucide-react";
 
 // IMPORT DU PONT API SÉCURISÉ
 import api from "@/api/axios";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { cart, getCartTotal, clearCart } = useCart();
+  // Vérification si ton context utilise 'cart' ou 'items'
+  const { cart, items, getCartTotal, clearCart } = useCart();
+  const currentCart = cart || items || []; // Sécurité pour éviter le crash
+  
   const { user, isAuthenticated } = useAuth();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
-  // État du formulaire initialisé avec les données user si dispo
+  // État du formulaire
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -32,23 +44,36 @@ const CheckoutPage = () => {
     postalCode: ""
   });
 
-  const total = getCartTotal() + 2000; // Total + frais de livraison
+  // Mise à jour si l'utilisateur se connecte après coup
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email
+      }));
+    }
+  }, [user]);
+
+  const total = getCartTotal() + 2000; 
 
   const handleOrder = async (e) => {
     e.preventDefault();
     
-    if (cart.length === 0) return toast.error("Votre panier est vide");
+    if (currentCart.length === 0) {
+      toast.error("Votre panier est vide");
+      return;
+    }
 
     setIsProcessing(true);
 
-    // Préparation des données pour le Backend
     const orderData = {
       customerName: formData.name,
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
       city: formData.city,
-      items: cart.map(item => ({
+      items: currentCart.map(item => ({
         productId: item._id || item.id,
         name: item.name,
         quantity: item.quantity,
@@ -58,11 +83,9 @@ const CheckoutPage = () => {
     };
 
     try {
-      // APPEL RÉEL AU BACKEND AVEC AXIOS
       await api.post('/orders', orderData);
-
       setIsSuccess(true);
-      window.scrollTo(0,0); // Remonte en haut pour voir le message de succès
+      window.scrollTo(0,0);
       clearCart();
       toast.success("Commande enregistrée avec succès !");
     } catch (error) {
@@ -87,7 +110,7 @@ const CheckoutPage = () => {
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-[#0A2A5C] mb-3 md:mb-4 leading-tight">Commande confirmée !</h1>
           <p className="text-sm md:text-base text-slate-500 mb-6 md:mb-8 leading-relaxed">
-            Merci {formData.name}. Un e-mail de confirmation a été envoyé à <strong>{formData.email}</strong>. 
+            Merci {formData.name}. Un e-mail de confirmation sera envoyé à <strong>{formData.email}</strong>. 
             Le service logistique CALSED vous contactera sous peu.
           </p>
           <Button 
@@ -104,7 +127,10 @@ const CheckoutPage = () => {
   return (
     <div className="min-h-screen pt-20 md:pt-28 pb-16 md:pb-20 bg-slate-50/50">
       <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl">
-        <button onClick={() => navigate("/panier")} className="flex items-center text-sm md:text-base text-slate-500 hover:text-[#0A2A5C] mb-4 md:mb-6 transition-colors font-medium">
+        <button 
+          onClick={() => navigate("/panier")} 
+          className="flex items-center text-sm md:text-base text-slate-500 hover:text-[#0A2A5C] mb-4 md:mb-6 transition-colors font-medium"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" /> Retour au panier
         </button>
 
@@ -113,7 +139,6 @@ const CheckoutPage = () => {
           {/* COLONNE GAUCHE : FORMULAIRE */}
           <div className="lg:col-span-8 space-y-6 md:space-y-8 order-1 lg:order-1">
             
-            {/* SECTION IDENTITÉ */}
             <Card className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/50 border-b p-5 md:p-8">
                 <CardTitle className="flex items-center gap-3 text-lg md:text-xl text-[#0A2A5C]">
@@ -149,7 +174,6 @@ const CheckoutPage = () => {
               </CardContent>
             </Card>
 
-            {/* SECTION LIVRAISON */}
             <Card className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/50 border-b p-5 md:p-8">
                 <CardTitle className="flex items-center gap-3 text-lg md:text-xl text-[#0A2A5C]">
@@ -163,19 +187,17 @@ const CheckoutPage = () => {
                     <Input 
                       required 
                       type="tel"
-                      pattern="(\+221|00221)?[7][05678][0-9]{7}"
-                      title="Veuillez entrer un numéro de téléphone sénégalais valide (ex: 77 123 45 67)"
-                      placeholder="Ex: 77 123 45 67" 
+                      placeholder="77 123 45 67" 
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
                       className="h-11 md:h-12 bg-white"
                     />
                   </div>
                   <div className="space-y-1.5 md:space-y-2">
-                    <Label className="text-xs md:text-sm font-bold text-slate-700">Adresse exacte (Quartier, Rue...) <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs md:text-sm font-bold text-slate-700">Adresse exacte <span className="text-red-500">*</span></Label>
                     <Input 
                       required 
-                      placeholder="Ex: Mermoz, Rue MZ 12, Immeuble X" 
+                      placeholder="Quartier, Rue, Immeuble..." 
                       value={formData.address}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
                       className="h-11 md:h-12 bg-white"
@@ -187,7 +209,7 @@ const CheckoutPage = () => {
                       <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="h-11 md:h-12 bg-white" />
                     </div>
                     <div className="space-y-1.5 md:space-y-2">
-                      <Label className="text-xs md:text-sm font-bold text-slate-700">Code Postal (Optionnel)</Label>
+                      <Label className="text-xs md:text-sm font-bold text-slate-700">Code Postal</Label>
                       <Input value={formData.postalCode} onChange={(e) => setFormData({...formData, postalCode: e.target.value})} className="h-11 md:h-12 bg-white" />
                     </div>
                   </div>
@@ -195,11 +217,10 @@ const CheckoutPage = () => {
               </CardContent>
             </Card>
 
-            {/* PAIEMENT */}
             <Card className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/50 border-b p-5 md:p-8">
                 <CardTitle className="flex items-center gap-3 text-lg md:text-xl text-[#0A2A5C]">
-                  <CreditCard className="h-5 w-5 md:h-6 md:w-6 text-amber-500" /> Méthode de règlement
+                  <CreditCard className="h-5 w-5 md:h-6 md:w-6 text-amber-500" /> Mode de règlement
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-5 md:p-8">
@@ -210,7 +231,7 @@ const CheckoutPage = () => {
                     </div>
                     <div>
                       <p className="font-bold text-sm md:text-base text-[#0A2A5C]">Paiement à la réception</p>
-                      <p className="text-[10px] md:text-xs text-amber-700 mt-0.5 leading-snug">Espèces ou transfert (OM/Wave) lors de la livraison</p>
+                      <p className="text-[10px] md:text-xs text-amber-700 mt-0.5 leading-snug">Espèces ou transfert lors de la livraison</p>
                     </div>
                   </div>
                   <div className="h-5 w-5 md:h-6 md:w-6 rounded-full border-[3px] md:border-4 border-amber-500 bg-white shadow-inner shrink-0 ml-2"></div>
@@ -223,14 +244,14 @@ const CheckoutPage = () => {
           <div className="lg:col-span-4 space-y-6 order-2 lg:order-2">
             <Card className="border-0 shadow-xl rounded-2xl md:rounded-[2.5rem] bg-white overflow-hidden lg:sticky lg:top-24 border-t-[6px] md:border-t-8 border-[#0A2A5C]">
               <div className="p-5 md:p-8 pb-3 md:pb-4 border-b border-slate-50">
-                <h2 className="text-lg md:text-xl font-bold text-[#0A2A5C]">Votre commande</h2>
+                <h2 className="text-lg md:text-xl font-bold text-[#0A2A5C]">Résumé</h2>
               </div>
               <CardContent className="p-5 md:p-8 pt-4 md:pt-6 space-y-4">
                 <div className="max-h-48 md:max-h-60 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                  {cart.map(item => (
-                    <div key={item._id || item.id} className="flex justify-between text-xs md:text-sm">
+                  {currentCart.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-xs md:text-sm">
                       <span className="text-slate-500 truncate mr-3">{item.quantity}x {item.name}</span>
-                      <span className="font-bold text-slate-700 shrink-0">{(item.price * item.quantity).toLocaleString()} FCFA</span>
+                      <span className="font-bold text-slate-700 shrink-0">{(item.price * item.quantity).toLocaleString()} F</span>
                     </div>
                   ))}
                 </div>
@@ -238,24 +259,24 @@ const CheckoutPage = () => {
                 <Separator className="bg-slate-100 my-4" />
                 
                 <div className="space-y-2 md:space-y-3">
-                  <div className="flex justify-between text-xs md:text-sm text-slate-500 font-medium">
+                  <div className="flex justify-between text-xs md:text-sm text-slate-500">
                     <span>Articles</span>
-                    <span>{getCartTotal().toLocaleString()} FCFA</span>
+                    <span>{getCartTotal().toLocaleString()} F</span>
                   </div>
-                  <div className="flex justify-between text-xs md:text-sm text-slate-500 font-medium">
-                    <span>Livraison (Dakar)</span>
-                    <span>2,000 FCFA</span>
+                  <div className="flex justify-between text-xs md:text-sm text-slate-500">
+                    <span>Livraison</span>
+                    <span>2,000 F</span>
                   </div>
                   <div className="flex justify-between items-end pt-3 md:pt-4 border-t border-slate-50 mt-2">
-                    <span className="text-xs md:text-sm font-bold text-[#0A2A5C] uppercase tracking-wider">Total TTC</span>
-                    <span className="text-2xl md:text-3xl font-black text-[#0A2A5C]">{total.toLocaleString()} FCFA</span>
+                    <span className="text-xs md:text-sm font-bold text-[#0A2A5C] uppercase">Total TTC</span>
+                    <span className="text-2xl md:text-3xl font-black text-[#0A2A5C]">{total.toLocaleString()} F</span>
                   </div>
                 </div>
                 
                 <Button 
                   form="checkout-form"
                   type="submit"
-                  disabled={isProcessing}
+                  disabled={isProcessing || currentCart.length === 0}
                   className="w-full h-14 md:h-16 bg-amber-400 hover:bg-amber-500 text-[#0A2A5C] rounded-xl md:rounded-2xl text-base md:text-lg font-black mt-6 shadow-lg shadow-amber-200/50 transition-all hover:-translate-y-1 active:scale-[0.98]"
                 >
                   {isProcessing ? (
@@ -264,11 +285,11 @@ const CheckoutPage = () => {
                       <span>Traitement...</span>
                     </div>
                   ) : (
-                    "Valider mon achat"
+                    "Valider la commande"
                   )}
                 </Button>
-                <p className="text-[9px] md:text-[10px] text-center text-slate-400 mt-4 md:mt-5 font-medium uppercase tracking-widest flex justify-center items-center gap-1.5">
-                   <Lock className="h-3 w-3" /> Transaction sécurisée par CALSED
+                <p className="text-[9px] md:text-[10px] text-center text-slate-400 mt-4 md:mt-5 font-medium uppercase flex justify-center items-center gap-1.5">
+                   <Lock className="h-3 w-3" /> Transaction sécurisée
                 </p>
               </CardContent>
             </Card>
