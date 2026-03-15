@@ -22,7 +22,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // NOUVEAU : Clé pour forcer le rechargement de l'image
+  // Clé pour forcer le rechargement de l'image
   const [avatarKey, setAvatarKey] = useState(Date.now());
   
   const fileInputRef = useRef(null); 
@@ -35,7 +35,6 @@ const ProfilePage = () => {
     education: []
   });
 
-  // --- CORRECTION DÉPLOIEMENT : Gestion sécurisée des URLs d'images ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http') || imagePath.startsWith('data:')) return imagePath;
@@ -43,7 +42,6 @@ const ProfilePage = () => {
     return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
   };
 
-  // --- SÉCURITÉ ---
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
       navigate("/admin"); 
@@ -51,7 +49,6 @@ const ProfilePage = () => {
     }
   }, [user, isAuthenticated, navigate]);
 
-  // --- CHARGEMENT DES DONNÉES ---
   useEffect(() => {
     if (user) {
       setFormData({
@@ -70,7 +67,7 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  // --- GESTION PHOTO ---
+  // --- GESTION PHOTO (CORRIGÉE) ---
   const handleImageClick = () => fileInputRef.current.click();
 
   const handleFileChange = async (e) => {
@@ -82,28 +79,34 @@ const ProfilePage = () => {
       return;
     }
 
-    const data = new FormData();
-    data.append('image', file); 
+    const uploadData = new FormData();
+    uploadData.append('image', file); // On utilise 'image' car c'est ce que ton Multer attend
     
     const toastId = toast.loading("Mise à jour de la photo...");
 
     try {
-      // APPEL AXIOS (Gère automatiquement le FormData et les headers multipart)
-      const response = await api.post(`/upload/avatar/${user.id || user._id}`, data);
+      // 1. On upload l'image avec ta route générique qui fonctionne
+      const uploadRes = await api.post('/upload', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       
-      const result = response.data;
+      const imageUrl = typeof uploadRes.data === 'string' ? uploadRes.data : uploadRes.data.url;
+      const userId = user.id || user._id;
+
+      // 2. On met à jour l'utilisateur dans la base de données avec la nouvelle URL
+      await api.put(`/users/${userId}`, { avatar: imageUrl });
       
-      // 1. Mise à jour du contexte
-      updateUserData({ avatar: result.avatar });
-      
-      // 2. Mise à jour de la clé pour forcer l'affichage immédiat
+      // 3. Mise à jour de l'affichage en direct
+      updateUserData({ avatar: imageUrl });
       setAvatarKey(Date.now());
       
-      toast.success("Photo mise à jour !", { id: toastId });
+      toast.success("Photo mise à jour avec succès !", { id: toastId });
     } catch (error) {
       console.error("Erreur upload:", error);
-      const errorMsg = error.response?.data?.message || "Erreur lors de l'envoi";
-      toast.error(errorMsg, { id: toastId });
+      toast.error("Erreur lors de l'envoi de l'image.", { id: toastId });
+    } finally {
+      // On vide l'input pour pouvoir sélectionner la même image si besoin
+      e.target.value = ""; 
     }
   };
 
@@ -154,6 +157,7 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen pt-24 pb-12 bg-slate-50">
       <div className="container mx-auto px-4 max-w-4xl">
+        {/* Input fichier caché pour l'avatar */}
         <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 
         {/* EN-TÊTE PROFIL */}
@@ -166,7 +170,6 @@ const ProfilePage = () => {
             <div className="relative flex justify-between items-end -mt-12 mb-6">
               <div className="relative group">
                 <Avatar className="w-32 h-32 border-4 border-white shadow-lg bg-white">
-                  {/* Utilisation de getImageUrl() */}
                   <AvatarImage 
                     src={user?.avatar ? `${getImageUrl(user.avatar)}?t=${avatarKey}` : ""} 
                     className="object-cover" 
