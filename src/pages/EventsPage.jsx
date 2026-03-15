@@ -185,7 +185,6 @@ const EventsPage = () => {
                 </Button>
               </DialogTrigger>
               
-              {/* CORRECTION ICI : onInteractOutside pour bloquer la fermeture automatique */}
               <DialogContent 
                 className="sm:max-w-[500px] rounded-3xl max-h-[90vh] overflow-y-auto custom-scrollbar"
                 onInteractOutside={(e) => e.preventDefault()}
@@ -193,6 +192,18 @@ const EventsPage = () => {
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-[#0A2A5C]">Nouvel Événement</DialogTitle>
                 </DialogHeader>
+
+                {/* MODIFICATION IMPORTANTE : LA MODALE DE RECADRAGE EST ICI, DANS LE DIALOG CONTENT */}
+                {cropModalSrc && (
+                  <ImageCropModal
+                    imageSrc={cropModalSrc}
+                    aspect={16 / 9}
+                    isUploading={uploading}
+                    onClose={() => setCropModalSrc(null)}
+                    onComplete={handleCroppedUpload}
+                  />
+                )}
+
                 <form onSubmit={handleCreateEvent} className="space-y-4 pt-4">
                   
                   {/* IMAGE DE COUVERTURE */}
@@ -341,17 +352,6 @@ const EventsPage = () => {
           )}
         </div>
       </div>
-
-      {/* MODALE DE RECADRAGE */}
-      {cropModalSrc && (
-        <ImageCropModal
-          imageSrc={cropModalSrc}
-          aspect={16 / 9}
-          isUploading={uploading}
-          onClose={() => setCropModalSrc(null)}
-          onComplete={handleCroppedUpload}
-        />
-      )}
 
     </div>
   );
