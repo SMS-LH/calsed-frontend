@@ -38,7 +38,7 @@ import {
   ShoppingCart
 } from "lucide-react";
 
-import logoCalsed from "../../assets/logo.jpeg";
+import logoCalsed from "../../assets/logo-calsed.png";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
