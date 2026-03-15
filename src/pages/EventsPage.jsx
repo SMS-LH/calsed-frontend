@@ -20,7 +20,7 @@ import {
   Trash2, 
   Loader2,
   AlertCircle,
-  Image as ImageIcon // Ajout de l'icône image
+  Image as ImageIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -52,7 +52,7 @@ const EventsPage = () => {
     time: "",
     location: "",
     type: "Rencontre",
-    image: "" // Nouveau champ
+    image: ""
   };
   const [formData, setFormData] = useState(defaultFormData);
 
@@ -184,13 +184,18 @@ const EventsPage = () => {
                   <Plus className="w-4 h-4 mr-2" /> Créer un événement
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] rounded-3xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+              
+              {/* CORRECTION ICI : onInteractOutside pour bloquer la fermeture automatique */}
+              <DialogContent 
+                className="sm:max-w-[500px] rounded-3xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+                onInteractOutside={(e) => e.preventDefault()}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-[#0A2A5C]">Nouvel Événement</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateEvent} className="space-y-4 pt-4">
                   
-                  {/* IMAGE DE COUVERTURE (AJOUT) */}
+                  {/* IMAGE DE COUVERTURE */}
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-500 uppercase font-bold flex items-center gap-2">
                       <ImageIcon className="h-4 w-4"/> Affiche / Couverture (Optionnel)
@@ -278,7 +283,7 @@ const EventsPage = () => {
                     <span className="text-xs opacity-60 mt-1">{format(new Date(event.date), 'yyyy')}</span>
                   </div>
 
-                  {/* Colonne Image (Nouvelle !) */}
+                  {/* Colonne Image */}
                   {event.image && (
                     <div className="w-full md:w-64 h-48 md:h-auto shrink-0 bg-slate-100 border-r border-slate-100">
                       <img src={getImageUrl(event.image)} alt={event.title} className="w-full h-full object-cover" />
