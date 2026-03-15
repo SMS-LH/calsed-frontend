@@ -26,12 +26,11 @@ import {
   Building,
   X,
   Users,
-  Trash2 
+  Trash2,
+  Pencil // Ajout de l'icône modifier
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-
-// IMPORT DU PONT API SÉCURISÉ
 import api from "@/api/axios";
 
 const fadeInUp = {
@@ -46,9 +45,10 @@ const DashboardPage = () => {
   const [offers, setOffers] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [showModal, setShowModal] = useState(false); 
+  const [editingOfferId, setEditingOfferId] = useState(null); // Nouvel état pour l'édition
   
-  // État du formulaire d'ajout
-  const [newOffer, setNewOffer] = useState({
+  // État du formulaire
+  const defaultOfferState = {
     title: "",
     company: "",
     type: "Emploi",
@@ -56,9 +56,10 @@ const DashboardPage = () => {
     description: "",
     link: "",
     contactEmail: ""
-  });
+  };
+  const [newOffer, setNewOffer] = useState(defaultOfferState);
 
-  // --- CORRECTION DÉPLOIEMENT : Gestion sécurisée des URLs d'images ---
+  // Gestion des URLs d'images
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
@@ -66,7 +67,7 @@ const DashboardPage = () => {
     return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
   };
 
-  // 1. Charger les offres au démarrage (VIA AXIOS)
+  // 1. Charger les offres
   const fetchOffers = async () => {
     try {
       const { data } = await api.get('/offers');
@@ -80,8 +81,8 @@ const DashboardPage = () => {
     if (isAuthenticated) fetchOffers();
   }, [isAuthenticated]);
 
-  // 2. Fonction pour publier une offre (VIA AXIOS)
-  const handleCreateOffer = async (e) => {
+  // 2. Créer ou Modifier une offre
+  const handleCreateOrUpdateOffer = async (e) => {
     e.preventDefault();
     
     if (!newOffer.title || !newOffer.company || !newOffer.description) {
@@ -90,31 +91,57 @@ const DashboardPage = () => {
     }
 
     try {
-      await api.post('/offers', { ...newOffer, authorId: user.id || user._id });
+      if (editingOfferId) {
+        // Mode MODIFICATION
+        await api.put(`/offers/${editingOfferId}`, newOffer);
+        toast.success("Offre modifiée avec succès !");
+      } else {
+        // Mode CRÉATION
+        await api.post('/offers', { ...newOffer, authorId: user.id || user._id });
+        toast.success("Offre publiée avec succès !");
+      }
 
-      toast.success("Offre publiée avec succès !");
-      setShowModal(false); 
+      closeModal();
       fetchOffers(); 
-      setNewOffer({ title: "", company: "", type: "Emploi", location: "", description: "", link: "", contactEmail: "" });
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Erreur lors de la publication";
+      const errorMsg = error.response?.data?.message || "Erreur lors de la sauvegarde";
       toast.error(errorMsg);
     }
   };
 
-  // 3. Fonction pour SUPPRIMER une offre (VIA AXIOS)
+  // 3. Ouvrir le modal en mode "Modification"
+  const handleEditClick = (offer) => {
+    setEditingOfferId(offer._id || offer.id);
+    setNewOffer({
+      title: offer.title || "",
+      company: offer.company || "",
+      type: offer.type || "Emploi",
+      location: offer.location || "",
+      description: offer.description || "",
+      link: offer.link || "",
+      contactEmail: offer.contactEmail || ""
+    });
+    setShowModal(true);
+  };
+
+  // 4. Supprimer une offre
   const handleDeleteOffer = async (offerId) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette offre ?")) return;
 
     try {
       await api.delete(`/offers/${offerId}`);
-
       toast.success("Offre supprimée.");
-      // Mise à jour locale pour éviter de recharger toute la page
       setOffers(offers.filter(offer => (offer._id || offer.id) !== offerId));
     } catch (error) {
       toast.error("Erreur serveur lors de la suppression.");
     }
+  };
+
+  // 5. Fermer et réinitialiser le modal
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingOfferId(null);
+    setNewOffer(defaultOfferState);
   };
 
   // Sécurité
@@ -205,7 +232,11 @@ const DashboardPage = () => {
         {/* BOUTON D'ACTION PRINCIPAL */}
         <div className="flex justify-end mb-6">
             <Button 
-              onClick={() => setShowModal(true)} 
+              onClick={() => {
+                setEditingOfferId(null);
+                setNewOffer(defaultOfferState);
+                setShowModal(true);
+              }} 
               className="bg-[#FFD700] text-[#0A2A5C] hover:bg-[#FFD700]/90 font-bold shadow-lg h-12 px-6"
             >
                 <Plus className="mr-2 h-5 w-5" /> Publier une opportunité
@@ -230,26 +261,39 @@ const DashboardPage = () => {
                     </div>
                 ) : (
                     filteredOffers.map((offer) => {
-                      // --- LOGIQUE DE VÉRIFICATION CORRIGÉE ---
                       const currentUserId = (user?._id || user?.id || "").toString();
                       const offerAuthorId = (offer.author?._id || offer.authorId || offer.author)?.toString() || "";
                       
                       const isAuthor = (currentUserId !== "" && currentUserId === offerAuthorId) || user?.role === 'admin';
-                      // ----------------------------------------
+                      
+                      // Sécurisation de l'affichage du nom de l'auteur
+                      const authorName = offer.author?.name || offer.authorName || "un membre du réseau";
 
                       return (
                         <Card key={offer._id || offer.id} className="border-0 shadow-sm hover:shadow-md transition-all group relative">
                           <CardContent className="p-6">
                             
-                            {/* BOUTON SUPPRIMER (Visible seulement pour l'auteur) */}
+                            {/* BOUTONS D'ACTION (Éditer / Supprimer) */}
                             {isAuthor && (
-                              <div className="absolute top-4 right-4 z-10">
+                              <div className="absolute top-4 right-4 z-10 flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-slate-400 hover:text-[#0A2A5C] hover:bg-blue-50 transition-colors"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleEditClick(offer);
+                                  }}
+                                  title="Modifier cette offre"
+                                >
+                                  <Pencil className="h-5 w-5" />
+                                </Button>
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
                                   className="text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                                   onClick={(e) => {
-                                    e.preventDefault(); // Important: empêche le clic de traverser la carte
+                                    e.preventDefault();
                                     handleDeleteOffer(offer._id || offer.id);
                                   }}
                                   title="Supprimer cette offre"
@@ -260,7 +304,7 @@ const DashboardPage = () => {
                             )}
 
                             <div className="flex flex-col md:flex-row gap-6">
-                              {/* Logo Entreprise */}
+                              {/* Logo Entreprise / Avatar */}
                               <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
                                 {offer.author?.avatar ? (
                                    <img src={getImageUrl(offer.author.avatar)} alt="Logo" className="w-full h-full object-cover rounded-xl" />
@@ -269,7 +313,7 @@ const DashboardPage = () => {
                                 )}
                               </div>
                               
-                              <div className="flex-1 pr-10"> {/* Padding Right pour ne pas chevaucher le bouton supprimer */}
+                              <div className="flex-1 pr-20"> {/* pr-20 pour laisser la place aux 2 boutons */}
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                                   <div>
                                     <h3 className="text-xl font-bold text-[#0A2A5C] group-hover:text-blue-700 transition-colors">
@@ -289,7 +333,7 @@ const DashboardPage = () => {
                                 <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-4">
                                     <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {offer.location}</span>
                                     <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {new Date(offer.createdAt).toLocaleDateString('fr-FR')}</span>
-                                    {offer.author && <span className="flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded-full">Publié par {offer.author.name}</span>}
+                                    {offer.author && <span className="flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded-full">Publié par {authorName}</span>}
                                 </div>
 
                                 <p className="text-slate-600 leading-relaxed mb-6 whitespace-pre-line">
@@ -324,7 +368,7 @@ const DashboardPage = () => {
         </motion.div>
       </div>
 
-      {/* MODAL (FORMULAIRE D'AJOUT) */}
+      {/* MODAL (FORMULAIRE D'AJOUT / MODIFICATION) */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <motion.div 
@@ -333,13 +377,15 @@ const DashboardPage = () => {
             className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-[#0A2A5C]">Publier une opportunité</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowModal(false)}>
+              <h2 className="text-xl font-bold text-[#0A2A5C]">
+                {editingOfferId ? "Modifier l'opportunité" : "Publier une opportunité"}
+              </h2>
+              <Button variant="ghost" size="icon" onClick={closeModal}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
             
-            <form onSubmit={handleCreateOffer} className="p-6 space-y-4">
+            <form onSubmit={handleCreateOrUpdateOffer} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                   <div>
                       <Label className="mb-2 block">Titre du poste *</Label>
@@ -387,7 +433,7 @@ const DashboardPage = () => {
 
               <div className="pt-4">
                 <Button type="submit" className="w-full bg-[#0A2A5C] hover:bg-[#0A2A5C]/90 h-12 text-lg font-medium">
-                  Publier l'annonce
+                  {editingOfferId ? "Enregistrer les modifications" : "Publier l'annonce"}
                 </Button>
               </div>
             </form>
