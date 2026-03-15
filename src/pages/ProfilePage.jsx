@@ -74,8 +74,9 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("L'image est trop lourde (max 2Mo)");
+    // CORRECTION : Limite passée à 5 Mo
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image est trop lourde (max 5Mo)");
       return;
     }
 
@@ -93,8 +94,8 @@ const ProfilePage = () => {
       const imageUrl = typeof uploadRes.data === 'string' ? uploadRes.data : uploadRes.data.url;
       const userId = user.id || user._id;
 
-      // 2. On met à jour l'utilisateur dans la base de données avec la nouvelle URL
-      await api.put(`/users/${userId}`, { avatar: imageUrl });
+      // 2. CORRECTION : On utilise la bonne route de ton backend
+      await api.post(`/users/upload-avatar/${userId}`, { avatar: imageUrl });
       
       // 3. Mise à jour de l'affichage en direct
       updateUserData({ avatar: imageUrl });
