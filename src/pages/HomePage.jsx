@@ -31,6 +31,7 @@ const HomePage = () => {
   const [images, setImages] = useState({
     heroImage: "",
     philImage1: "",
+    schoolImage: "", // <--- Ajoute cette ligne
   });
 
   useEffect(() => {
@@ -45,10 +46,11 @@ const HomePage = () => {
         setImages({
           heroImage: data.heroImage || "",
           philImage1: data.philImage1 || "",
+          schoolImage: data.schoolImage || "", // <--- Ajoute cette ligne
         });
       }
     } catch (error) {
-      console.error("Erreur de chargement des images de la page d'accueil.");
+      console.error("Erreur de chargement des images.");
     }
   };
 
@@ -68,13 +70,26 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
       
-      {/* --- HERO SECTION (Fond sombre pour la Navbar transparente) --- */}
+      {/* --- HERO SECTION (Avec Image de fond configurée) --- */}
       <section className="relative pt-32 pb-16 lg:pt-48 lg:pb-24 overflow-hidden bg-[#0A2A5C]">
-        {/* Décors d'arrière-plan */}
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-800/40 via-transparent to-transparent -z-10"></div>
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -z-10"></div>
+        
+        {/* CORRECTION : Ajout de l'image de fond si elle existe */}
+        {images.heroImage && (
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={getImageUrl(images.heroImage)} 
+              alt="Fond Réseau CALSED" 
+              className="w-full h-full object-cover opacity-20 mix-blend-overlay"
+            />
+          </div>
+        )}
 
-        <div className="container mx-auto px-6 lg:px-12">
+        {/* Décors d'arrière-plan (superposés à l'image) */}
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-800/40 via-transparent to-transparent z-10"></div>
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl z-10"></div>
+
+        {/* Contenu (z-20 pour être au-dessus de tout) */}
+        <div className="container mx-auto px-6 lg:px-12 relative z-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
             {/* Colonne Texte */}
@@ -108,22 +123,27 @@ const HomePage = () => {
               </motion.div>
             </motion.div>
 
-            {/* Colonne Image (Hero) */}
+            {/* Colonne Image (Espace réservé pour la 2ème image ou déco) */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} 
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative hidden md:block"
             >
+              {/* Note: On garde cet espace pour la photo du lycée par exemple, distincte du fond */}
               <div className="aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#061836] relative">
-                {images.heroImage ? (
-                  <img src={getImageUrl(images.heroImage)} alt="Lycée Scientifique d'Excellence de Diourbel" className="w-full h-full object-cover opacity-90" />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-blue-300/50">
-                    <Building2 className="w-16 h-16 mb-4 opacity-50" />
-                    <p className="font-medium text-sm">Image de couverture (Admin)</p>
-                  </div>
-                )}
+                  {images.schoolImage ? (
+  <img 
+    src={getImageUrl(images.schoolImage)} 
+    alt="Lycée Scientifique d'Excellence" 
+    className="w-full h-full object-cover" 
+  />
+) : (
+  <div className="w-full h-full flex flex-col items-center justify-center text-blue-300/50">
+    <Building2 className="w-16 h-16 mb-4 opacity-50" />
+    <p className="font-medium text-sm">Photo du Lycée (Optionnelle)</p>
+  </div>
+)}
                 {/* Petite carte flottante déco */}
                 <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 animate-bounce hover:animate-none">
                   <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
@@ -131,7 +151,7 @@ const HomePage = () => {
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Notre fierté</p>
-                    <p className="text-sm font-bold text-slate-900">100% de réussite au BAC</p>
+                    <p className="text-sm font-bold text-slate-900">Lycée Scientifique d'Excellence de Diourbel</p>
                   </div>
                 </div>
               </div>
@@ -141,7 +161,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- STATS RAPIDES (Collées sous le Hero, même couleur) --- */}
+      {/* --- STATS RAPIDES (Toujours collées sous le Hero) --- */}
       <section className="py-12 bg-[#08224a] text-white border-t border-white/5">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-blue-800/50">

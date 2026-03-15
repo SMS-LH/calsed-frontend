@@ -4,31 +4,31 @@ import { useContent } from "@/context/ContentContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Linkedin,
   Mail,
-  ShieldCheck,
-  Users,
+  Users2,
   School,
   Target,
-  Globe2,
   Award,
-  ArrowRight
+  ArrowRight,
+  HeartHandshake,
+  Globe2
 } from "lucide-react";
 import api from "@/api/axios";
 
-// Animations institutionnelles
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
+// Animations douces
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
 };
 
-const staggerContainer = {
+const stagger = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.15 }
+    transition: { staggerChildren: 0.1 }
   }
 };
 
@@ -42,8 +42,6 @@ const TeamPage = () => {
     const fetchSettings = async () => {
       try {
         const { data } = await api.get('/settings');
-        
-        // Le backend renvoie maintenant les données directement à la racine
         if (data) {
           setSchoolImage(data.schoolImage || data.aboutImage || data.philImage1 || "");
         }
@@ -54,16 +52,11 @@ const TeamPage = () => {
     fetchSettings();
   }, []);
 
-  // --- CORRECTION : Spécifique pour Create React App (.env avec REACT_APP_) ---
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
-
-    // Si l'image vient de Cloudinary (ou base64), on l'affiche telle quelle !
     if (imagePath.startsWith('http') || imagePath.startsWith('data:')) {
       return imagePath;
     }
-
-    // Fallback sécurisé pour les anciennes images locales avec process.env
     const baseUrl = process.env.REACT_APP_API_URL 
       ? process.env.REACT_APP_API_URL.replace(/\/api$/, '') 
       : "https://calsed-api.onrender.com";
@@ -73,155 +66,216 @@ const TeamPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pb-24">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20">
       
-      {/* 1. HERO SECTION - INSTITUTIONNEL */}
-      <section className="bg-[#0A2A5C] text-white pt-40 pb-32 relative overflow-hidden">
-        {/* Overlay premium */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A2A5C] to-[#051630] z-0"></div>
-        <div className="absolute inset-0 opacity-5 z-0" 
-              style={{ 
-                  backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', 
-                  backgroundSize: '48px 48px' 
-              }} 
-        />
+      {/* --- 1. HERO SECTION (Lumineux et centré) --- */}
+      <section className="pt-32 pb-20 lg:pt-40 lg:pb-28 bg-slate-50 relative overflow-hidden">
+        {/* Décors d'arrière-plan */}
+        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-600/5 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl -z-10"></div>
         
-        <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="flex justify-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-amber-400 text-xs font-bold tracking-widest uppercase">
-                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                Notre Identité
-              </div>
+        <div className="container mx-auto px-6 relative z-10 text-center max-w-3xl">
+          <motion.div initial="hidden" animate="visible" variants={stagger}>
+            <motion.div variants={fadeUp} className="mb-6">
+              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none px-4 py-1.5 rounded-full font-semibold uppercase tracking-wider text-xs">
+                Qui sommes-nous ?
+              </Badge>
             </motion.div>
             
-            <motion.h1 variants={fadeInUp} className="text-4xl md:text-6xl font-black tracking-tight mb-8 leading-[1.1]">
-              L'Excellence comme <span className="text-amber-500">Héritage.</span>
+            <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 text-slate-900">
+              Les visages derrière le <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0A2A5C] to-blue-600">CALSED.</span>
             </motion.h1>
             
-            <motion.p variants={fadeInUp} className="text-lg md:text-xl text-blue-100/80 font-light leading-relaxed max-w-2xl mx-auto">
-              Nous fédérons les talents issus du Lycée Scientifique d'Excellence de Diourbel pour bâtir un réseau d'influence et impacter durablement notre société.
+            <motion.p variants={fadeUp} className="text-lg md:text-xl text-slate-600 font-light leading-relaxed">
+              Découvrez l'équipe bénévole qui fait vivre l'association au quotidien, ainsi que l'histoire du lycée qui nous a tous réunis.
             </motion.p>
           </motion.div>
         </div>
       </section>
 
-      {/* 2. L'ÉCOLE (LSED) - PRÉSENTATION SOBRE */}
-      <section className="py-24 bg-white border-b border-slate-100">
+      {/* --- 2. L'ÉQUIPE (LE BUREAU) --- */}
+      <section className="py-24 bg-white relative">
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Le Bureau National</h2>
+            <p className="text-slate-600">Une équipe passionnée, élue pour représenter les anciens élèves et mener à bien les projets de l'association.</p>
+          </div>
+
+          {teamMembers.length > 0 ? (
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+            >
+              {teamMembers.map((member, index) => (
+                <motion.div key={member._id || index} variants={fadeUp} className="h-full">
+                  <Card className="h-full bg-white border border-slate-100 rounded-3xl overflow-hidden hover:shadow-xl hover:border-blue-100 transition-all duration-300 group flex flex-col">
+                    <CardContent className="p-8 flex-1 flex flex-col items-center text-center">
+                      
+                      {/* Avatar */}
+                      <div className="mb-6 relative">
+                        <div className="absolute inset-0 bg-blue-100 rounded-full scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500 -z-10"></div>
+                        <Avatar className="h-32 w-32 border-4 border-white shadow-lg bg-slate-50 relative z-10 transition-transform duration-500 group-hover:scale-105">
+                          <AvatarImage src={getImageUrl(member.image)} alt={member.name} className="object-cover" />
+                          <AvatarFallback className="bg-slate-100 text-[#0A2A5C] text-3xl font-black">
+                            {member.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+
+                      {/* Infos */}
+                      <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-[#0A2A5C] transition-colors">
+                        {member.name}
+                      </h3>
+                      <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">
+                        {member.role}
+                      </p>
+                      
+                      {member.generation && (
+                        <Badge variant="secondary" className="bg-slate-50 text-slate-500 font-medium mb-6">
+                          Promo {member.generation}
+                        </Badge>
+                      )}
+
+                      <div className="flex-1"></div> {/* Espaceur flexible */}
+
+                      {/* Réseaux / Contact */}
+                      <div className="flex justify-center gap-3 w-full pt-6 border-t border-slate-50 mt-auto">
+                        {member.linkedin && (
+                          <a href={member.linkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#0077b5] transition-colors duration-300">
+                            <Linkedin className="h-4 w-4" />
+                          </a>
+                        )}
+                        {member.email && (
+                          <a href={`mailto:${member.email}`} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#0A2A5C] transition-colors duration-300">
+                            <Mail className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="max-w-md mx-auto py-16 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+              <Users2 className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-700 mb-2">Bureau en cours de mise à jour</h3>
+              <p className="text-slate-500 font-light px-4">Les membres de l'équipe seront bientôt affichés ici.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* --- 3. HISTOIRE & LYCÉE (Split section) --- */}
+      <section className="py-24 bg-slate-50 border-y border-slate-100">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
-            {/* Image dynamique configurée par l'admin */}
+            {/* Contenu Texte */}
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="relative order-2 lg:order-1"
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="order-2 lg:order-1"
             >
-              <div className="aspect-[4/3] rounded-none overflow-hidden shadow-2xl border border-slate-100 relative group bg-slate-100">
-                <div className="absolute inset-0 bg-[#0A2A5C]/10 group-hover:bg-transparent transition-colors duration-700 z-10" />
-                <img 
-                  src={schoolImage ? getImageUrl(schoolImage) : "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?q=80&w=1000&auto=format&fit=crop"} 
-                  alt="Architecture LSED" 
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
-                />
-                
-                {/* Badge Flottant */}
-                <div className="absolute bottom-0 left-0 bg-white border-t border-r border-slate-200 p-6 shadow-sm max-w-xs z-20">
-                    <div className="flex items-start gap-4">
-                        <School className="h-6 w-6 text-[#0A2A5C] mt-1" />
-                        <div>
-                            <p className="font-bold text-slate-900 text-sm uppercase tracking-wider">Alma Mater</p>
-                            <p className="text-xs text-slate-500 mt-1 font-medium">Lycée Scientifique d'Excellence</p>
-                        </div>
-                    </div>
-                </div>
-              </div>
-              {/* Élément décoratif géométrique */}
-              <div className="absolute -top-4 -left-4 w-24 h-24 border-t-4 border-l-4 border-amber-500 -z-10"></div>
-            </motion.div>
-
-            {/* Contenu Texte */}
-            <motion.div 
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="order-1 lg:order-2"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-px w-12 bg-amber-500"></div>
-                <span className="text-amber-600 font-bold text-sm uppercase tracking-widest">Nos Origines</span>
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black text-[#0A2A5C] mb-8 tracking-tight leading-tight">
-                Le Berceau de l'Élite Scientifique
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-none px-3 py-1 mb-4">
+                Nos Origines
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-tight">
+                Le berceau de notre communauté.
               </h2>
               <div className="space-y-6 text-slate-600 text-lg leading-relaxed font-light">
                 <p>
-                  Fondé avec une mission claire : former l'élite scientifique du Sénégal. Le LSED est un creuset de rigueur, de discipline et de dépassement de soi.
+                  Fondé avec une mission claire : former l'élite scientifique du Sénégal. Le Lycée Scientifique d'Excellence de Diourbel (LSED) est un véritable creuset de rigueur et de dépassement de soi.
                 </p>
                 <p>
-                  C'est ici que commence notre histoire commune. Chaque année, les meilleurs élèves du pays y sont sélectionnés pour recevoir un encadrement de pointe, cultivant le savoir académique et les valeurs citoyennes.
+                  C'est entre ses murs que commence notre histoire commune. Au-delà des mathématiques et de la physique, nous y avons appris la solidarité et la force du collectif. Le CALSED est né de cette volonté de ne jamais rompre ce lien unique.
                 </p>
               </div>
               
-              <div className="grid grid-cols-2 gap-8 mt-12 pt-10 border-t border-slate-100">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Award className="h-6 w-6 text-amber-500" />
-                    <span className="font-black text-4xl text-[#0A2A5C]">100%</span>
-                  </div>
-                  <p className="text-sm text-slate-500 font-medium uppercase tracking-wider">Réussite au Baccalauréat</p>
+              <div className="grid grid-cols-2 gap-6 mt-10">
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                  <Award className="h-8 w-8 text-amber-500 mb-2" />
+                  <p className="text-2xl font-bold text-[#0A2A5C]">100%</p>
+                  <p className="text-sm text-slate-500 font-medium">Réussite au BAC</p>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Globe2 className="h-6 w-6 text-amber-500" />
-                    <span className="font-black text-4xl text-[#0A2A5C]">Intl.</span>
-                  </div>
-                  <p className="text-sm text-slate-500 font-medium uppercase tracking-wider">Présence Mondiale</p>
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                  <Globe2 className="h-8 w-8 text-blue-600 mb-2" />
+                  <p className="text-2xl font-bold text-[#0A2A5C]">Monde</p>
+                  <p className="text-sm text-slate-500 font-medium">Anciens à l'international</p>
                 </div>
               </div>
             </motion.div>
+
+            {/* Image du Lycée */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative order-1 lg:order-2"
+            >
+              <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-slate-200 relative">
+                {schoolImage ? (
+                  <img 
+                    src={getImageUrl(schoolImage)} 
+                    alt="Lycée Scientifique d'Excellence" 
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                    <School className="w-16 h-16 mb-4 opacity-50" />
+                    <p className="font-medium">Image du Lycée (Admin)</p>
+                  </div>
+                )}
+              </div>
+              {/* Déco */}
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl -z-10"></div>
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl -z-10"></div>
+            </motion.div>
+
           </div>
         </div>
       </section>
 
-      {/* 3. LE CALSED (VALEURS) - DESIGN GRILLE PREMIUM */}
-      <section className="py-24 bg-slate-50">
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="max-w-3xl mb-16">
-            <h2 className="text-3xl md:text-4xl font-black text-[#0A2A5C] mb-6 tracking-tight">
-              Notre Mission
-            </h2>
-            <p className="text-slate-600 text-lg font-light leading-relaxed">
-              Le CALSED structure la force de son réseau autour de trois piliers fondamentaux pour accompagner ses membres tout au long de leur parcours.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* --- 4. VALEURS --- */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-6 lg:px-12 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">Nos Valeurs Partagées</h2>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               {
-                icon: Users,
-                title: "Fédérer",
-                text: "Unir les alumni autour d'une plateforme commune pour faciliter les échanges, le partage d'expérience et le networking de haut niveau."
+                icon: HeartHandshake,
+                color: "text-amber-600",
+                bg: "bg-amber-100",
+                title: "Solidarité",
+                text: "S'entraider, du partage de cours jusqu'à la recommandation professionnelle."
               },
               {
                 icon: Target,
-                title: "Accompagner",
-                text: "Mentorat actif, orientation académique et bourses d'études pour soutenir l'ascension professionnelle des jeunes promotions."
+                color: "text-blue-600",
+                bg: "bg-blue-100",
+                title: "Excellence",
+                text: "Viser toujours plus haut, dans nos études comme dans nos carrières respectives."
               },
               {
-                icon: ShieldCheck,
-                title: "Pérenniser",
-                text: "Garantir la durabilité de l'esprit d'excellence à travers des actions institutionnelles fortes et un soutien constant au Lycée."
+                icon: Users2,
+                color: "text-green-600",
+                bg: "bg-green-100",
+                title: "Inclusivité",
+                text: "Une communauté bienveillante où chaque promotion trouve sa place."
               }
             ].map((item, i) => (
-              <div key={i} className="bg-white p-10 rounded-none border border-slate-200 shadow-sm hover:border-[#0A2A5C] hover:shadow-lg transition-all duration-500 group">
-                <div className="w-14 h-14 bg-slate-50 border border-slate-100 text-[#0A2A5C] flex items-center justify-center mb-8 group-hover:bg-[#0A2A5C] group-hover:text-white transition-colors duration-300">
-                  <item.icon className="h-6 w-6" />
+              <div key={i} className="flex flex-col items-center p-6">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${item.bg} ${item.color}`}>
+                  <item.icon className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-4">{item.title}</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
                 <p className="text-slate-500 font-light leading-relaxed">{item.text}</p>
               </div>
             ))}
@@ -229,108 +283,22 @@ const TeamPage = () => {
         </div>
       </section>
 
-      {/* 4. LE BUREAU (L'ÉQUIPE) - CARTES "EXECUTIVE" */}
-      <section className="py-24 container mx-auto px-6 lg:px-12">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-slate-200 pb-8 gap-6">
-          <div>
-            <span className="text-amber-600 font-bold uppercase tracking-widest text-xs block mb-3">Gouvernance</span>
-            <h2 className="text-3xl md:text-5xl font-black text-[#0A2A5C] tracking-tight">
-              Le Bureau National
-            </h2>
-          </div>
-          <p className="text-slate-500 text-base max-w-md md:text-right font-light leading-relaxed">
-            Une équipe exécutive engagée pour porter la vision stratégique et le développement du collectif.
-          </p>
-        </div>
-
-        {teamMembers.length > 0 ? (
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-          >
-            {teamMembers.map((member, index) => (
-              <motion.div key={member._id || index} variants={fadeInUp} className="h-full">
-                <div className="h-full bg-white border border-slate-200 rounded-none overflow-hidden hover:border-[#0A2A5C] hover:shadow-xl transition-all duration-500 group flex flex-col">
-                  
-                  {/* Bandeau Supérieur Coloré */}
-                  <div className="h-1.5 w-full bg-slate-200 group-hover:bg-[#0A2A5C] transition-colors duration-500"></div>
-
-                  <div className="p-8 flex-1 flex flex-col items-center text-center">
-                    {/* Avatar Premium */}
-                    <div className="mb-6 relative">
-                      <Avatar className="h-28 w-28 border-4 border-white shadow-md">
-                        <AvatarImage src={getImageUrl(member.image)} alt={member.name} className="object-cover" />
-                        <AvatarFallback className="bg-slate-100 text-[#0A2A5C] text-2xl font-black">
-                          {member.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="absolute bottom-1 right-1 bg-white rounded-full p-1.5 shadow-sm border border-slate-100">
-                         <div className="bg-amber-500 w-3.5 h-3.5 rounded-full"></div>
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <h3 className="text-xl font-bold text-slate-900 mb-1">
-                      {member.name}
-                    </h3>
-                    <p className="text-[#0A2A5C] text-xs font-black uppercase tracking-widest mb-4">
-                      {member.role}
-                    </p>
-                    
-                    <Badge variant="outline" className="bg-slate-50 text-slate-600 font-medium border-slate-200 mb-6 rounded-none px-3 py-1">
-                        Promo {member.generation}
-                    </Badge>
-
-                    <Separator className="bg-slate-100 w-full mb-6" />
-
-                    {/* Actions de contact */}
-                    <div className="flex justify-center gap-5 mt-auto">
-                      {member.linkedin && (
-                        <a href={member.linkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#0077b5] hover:border-[#0077b5] transition-all duration-300">
-                            <Linkedin className="h-4 w-4" />
-                        </a>
-                      )}
-                      {member.email && (
-                        <a href={`mailto:${member.email}`} className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#0A2A5C] hover:border-[#0A2A5C] transition-all duration-300">
-                            <Mail className="h-4 w-4" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <div className="col-span-full py-24 text-center bg-slate-50 border border-slate-200">
-            <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Gouvernance en cours d'élection</h3>
-            <p className="text-slate-500 font-light">La composition officielle du bureau sera publiée très prochainement.</p>
-          </div>
-        )}
-      </section>
-
-      {/* 5. CTA CONTACT - CALSED STYLE */}
+      {/* --- 5. CTA CONTACT --- */}
       <section className="container mx-auto px-6 lg:px-12 mt-8">
-        <div className="bg-[#0A2A5C] rounded-none p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
-          {/* Cercles décoratifs */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="bg-[#0A2A5C] rounded-3xl p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           
-          <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight">Rejoindre la dynamique</h2>
-            <p className="text-blue-100/90 mb-10 text-lg md:text-xl font-light leading-relaxed">
-              Vous souhaitez contribuer activement aux commissions du bureau, proposer un partenariat ou structurer une nouvelle initiative ?
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Envie de vous investir ?</h2>
+            <p className="text-blue-100/90 mb-10 text-lg font-light leading-relaxed">
+              Le bureau est toujours à la recherche de bonnes volontés pour animer les commissions ou proposer de nouveaux projets.
             </p>
             <Button 
-                size="lg"
-                className="bg-amber-500 text-white hover:bg-amber-600 h-14 px-10 rounded-none font-bold shadow-xl transition-transform hover:-translate-y-1 text-base" 
-                onClick={() => window.location.href = 'mailto:contact@calsed.sn'}
+              size="lg"
+              className="bg-amber-500 text-slate-900 hover:bg-amber-400 h-14 px-10 rounded-xl font-bold shadow-lg transition-transform hover:-translate-y-1" 
+              onClick={() => window.location.href = 'mailto:contact@calsed.sn'}
             >
-              Contactez le Bureau <ArrowRight className="ml-3 h-5 w-5" />
+              Nous écrire <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </div>

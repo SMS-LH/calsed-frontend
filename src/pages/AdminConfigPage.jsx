@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   Settings2, ArrowLeft, Trash2, Loader2, Save, 
   Image as ImageIcon, Users, ImagePlus,
-  Linkedin, Mail, Briefcase, Plus, School, LayoutTemplate
+  Linkedin, Mail, Briefcase, Plus, School, LayoutTemplate,
+  BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,63 +27,72 @@ const AdminConfigPage = () => {
   const [uploading, setUploading] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
-  // --- NOUVEAUX ÉTATS POUR LE RECADRAGE ---
+  // --- ÉTATS RECADRAGE ---
   const [cropModalSrc, setCropModalSrc] = useState(null);
-  const [cropConfig, setCropConfig] = useState({ aspect: 1, type: '', target: '' }); // Stocke le ratio et la cible
+  const [cropConfig, setCropConfig] = useState({ aspect: 1, type: '', target: '' }); 
 
   // --- ÉTATS BUREAU ---
   const [newMember, setNewMember] = useState({ 
-    name: "", 
-    role: "", 
-    generation: "", 
-    image: "", 
-    linkedin: "", 
-    email: "" 
+    name: "", role: "", generation: "", image: "", linkedin: "", email: "" 
   });
 
-  // --- ÉTATS IMAGES DU SITE ---
-  const [siteImages, setSiteImages] = useState({
+  // --- ÉTATS GLOBAUX DU SITE (Images + Stats) ---
+  const [siteConfig, setSiteConfig] = useState({
+    // Images
     heroImage: "", 
     philImage1: "", 
     philImage2: "",
-    schoolImage: "" 
+    schoolImage: "",
+    // Statistiques
+    stat1Number: "2016", stat1Label: "Année de création",
+    stat2Number: "+500", stat2Label: "Anciens élèves",
+    stat3Number: "15", stat3Label: "Pays de résidence",
+    stat4Number: "100%", stat4Label: "Engagement",
   });
 
   useEffect(() => {
-    fetchSiteImages();
+    fetchSiteConfig();
   }, []);
 
-  const fetchSiteImages = async () => {
+  const fetchSiteConfig = async () => {
     try {
       const { data } = await api.get('/settings');
       if (data) {
-        setSiteImages({
+        setSiteConfig({
           heroImage: data.heroImage || "",
           philImage1: data.philImage1 || "",
           philImage2: data.philImage2 || "" ,
-          schoolImage: data.schoolImage || ""
+          schoolImage: data.schoolImage || "",
+          
+          stat1Number: data.stat1Number || "2016",
+          stat1Label: data.stat1Label || "Année de création",
+          stat2Number: data.stat2Number || "+500",
+          stat2Label: data.stat2Label || "Anciens élèves",
+          stat3Number: data.stat3Number || "15",
+          stat3Label: data.stat3Label || "Pays de résidence",
+          stat4Number: data.stat4Number || "100%",
+          stat4Label: data.stat4Label || "Engagement",
         });
       }
     } catch (e) { 
-      toast.error("Erreur de chargement des images");
+      toast.error("Erreur de chargement de la configuration");
     } finally {
       setIsLoadingConfig(false);
     }
   };
 
-  const handleSaveImages = async () => {
-    const toastId = toast.loading("Mise à jour des images en cours...");
+  // Sauvegarde globale (Images ET Stats)
+  const handleSaveConfig = async () => {
+    const toastId = toast.loading("Mise à jour en cours...");
     try {
-      await api.put('/settings', siteImages);
-      toast.success("Images mises à jour avec succès !", { id: toastId });
+      await api.put('/settings', siteConfig);
+      toast.success("Configuration mise à jour avec succès !", { id: toastId });
     } catch (error) {
       toast.error("Erreur de sauvegarde sur le serveur.", { id: toastId });
     }
   };
 
   // --- LOGIQUE DE RECADRAGE ---
-  
-  // 1. Ouvre l'image avec le bon format (aspect)
   const handleFileSelect = (e, type, target, aspect) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -96,7 +106,6 @@ const AdminConfigPage = () => {
     e.target.value = ""; 
   };
 
-  // 2. Upload l'image recadrée au bon endroit
   const handleCroppedUpload = async (croppedFile) => {
     const formData = new FormData();
     formData.append('image', croppedFile);
@@ -112,13 +121,13 @@ const AdminConfigPage = () => {
       const imageUrl = typeof data === 'string' ? data : data.url;
       
       if (cropConfig.type === 'config') {
-        setSiteImages(prev => ({ ...prev, [cropConfig.target]: imageUrl }));
+        setSiteConfig(prev => ({ ...prev, [cropConfig.target]: imageUrl }));
       } else if (cropConfig.type === 'member') {
         setNewMember(prev => ({ ...prev, [cropConfig.target]: imageUrl }));
       }
 
       toast.success("Image recadrée et sauvegardée !", { id: toastId });
-      setCropModalSrc(null); // On ferme la modale
+      setCropModalSrc(null); 
     } catch (error) {
       toast.error("Erreur lors de l'envoi", { id: toastId });
     } finally {
@@ -160,38 +169,37 @@ const AdminConfigPage = () => {
               <Settings2 className="h-8 w-8 text-slate-600" /> Configuration du Site
             </h1>
           </div>
+          <Button onClick={handleSaveConfig} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md h-12 px-6">
+            <Save className="h-5 w-5 mr-2" /> Enregistrer les modifications
+          </Button>
         </div>
 
         <Tabs defaultValue="images" className="space-y-6">
           <TabsList className="bg-white p-1 h-auto flex-wrap border shadow-sm rounded-xl">
             <TabsTrigger value="images" className="gap-2 text-base px-6 py-3"><ImagePlus className="h-4 w-4"/> Médias & Images</TabsTrigger>
+            <TabsTrigger value="stats" className="gap-2 text-base px-6 py-3"><BarChart3 className="h-4 w-4"/> Statistiques</TabsTrigger>
             <TabsTrigger value="bureau" className="gap-2 text-base px-6 py-3"><Users className="h-4 w-4"/> Le Bureau CALSED</TabsTrigger>
           </TabsList>
 
           {/* ONGLET 1 : IMAGES DU SITE */}
           <TabsContent value="images">
             <Card className="border-0 shadow-sm bg-white">
-              <CardHeader className="bg-slate-100/50 border-b flex flex-row items-center justify-between">
-                <div>
+              <CardHeader className="bg-slate-100/50 border-b">
                   <CardTitle className="text-[#0A2A5C] text-xl">Images institutionnelles</CardTitle>
-                  <CardDescription>Gérez les photos principales affichées sur les pages publiques.</CardDescription>
-                </div>
-                <Button onClick={handleSaveImages} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
-                  <Save className="h-4 w-4 mr-2" /> Enregistrer les images
-                </Button>
+                  <CardDescription>Gérez les photos principales affichées sur la page d'accueil et les autres pages publiques.</CardDescription>
               </CardHeader>
               <CardContent className="p-8">
                 <div className="grid md:grid-cols-2 gap-10">
                   
-                  {/* Image Accueil - Hero (Format panoramique 16:9 ou 21:9) */}
+                  {/* ZONE 1 : Image Accueil - Hero */}
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
                       <LayoutTemplate className="h-4 w-4 text-[#0A2A5C]" /> Accueil : Bannière Principale
                     </Label>
                     <p className="text-xs text-slate-500 mb-2">Idéalement un format très large (16:9).</p>
                     <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
-                      {siteImages.heroImage ? (
-                        <img src={getImageUrl(siteImages.heroImage)} className="w-full h-full object-cover" alt="Hero"/>
+                      {siteConfig.heroImage ? (
+                        <img src={getImageUrl(siteConfig.heroImage)} className="w-full h-full object-cover" alt="Hero"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
@@ -204,15 +212,15 @@ const AdminConfigPage = () => {
                     </div>
                   </div>
 
-                  {/* Image Lycée (Format classique 4:3) */}
+                  {/* ZONE 2 : Image Lycée */}
                   <div className="space-y-3">
                     <Label className="text-sm font-bold text-slate-700 uppercase flex items-center gap-2">
                       <School className="h-4 w-4 text-[#0A2A5C]" /> Équipe : Photo du Lycée
                     </Label>
                     <p className="text-xs text-slate-500 mb-2">Image illustrative du LSED (Format 4:3).</p>
                     <div className="h-48 w-full bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
-                      {siteImages.schoolImage ? (
-                        <img src={getImageUrl(siteImages.schoolImage)} className="w-full h-full object-cover" alt="Lycée"/>
+                      {siteConfig.schoolImage ? (
+                        <img src={getImageUrl(siteConfig.schoolImage)} className="w-full h-full object-cover" alt="Lycée"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400">
                           <ImageIcon className="h-8 w-8 mb-2 opacity-50"/>
@@ -225,13 +233,13 @@ const AdminConfigPage = () => {
                     </div>
                   </div>
 
-                  {/* Image Mission 1 (Format vertical 3:4) */}
+                  {/* ZONE 3 : Image Action 1 */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Mission 1 (Verticale)</Label>
+                    <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Image Action Publique</Label>
                     <p className="text-xs text-slate-500 mb-2">Format vertical (3:4).</p>
                     <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
-                      {siteImages.philImage1 ? (
-                        <img src={getImageUrl(siteImages.philImage1)} className="w-full h-full object-cover" alt="Mission 1"/>
+                      {siteConfig.philImage1 ? (
+                        <img src={getImageUrl(siteConfig.philImage1)} className="w-full h-full object-cover" alt="Mission 1"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400"><ImageIcon className="h-8 w-8 mb-2 opacity-50"/></div>
                       )}
@@ -242,13 +250,13 @@ const AdminConfigPage = () => {
                     </div>
                   </div>
 
-                  {/* Image Mission 2 (Format vertical 3:4) */}
+                  {/* ZONE 4 : Image Action 2 (Ajoutée) */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-bold text-slate-700 uppercase">Accueil : Mission 2 (Verticale)</Label>
+                    <Label className="text-sm font-bold text-slate-700 uppercase">Image Optionnelle (Action 2)</Label>
                     <p className="text-xs text-slate-500 mb-2">Format vertical (3:4).</p>
                     <div className="h-64 w-48 bg-slate-100 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative group">
-                      {siteImages.philImage2 ? (
-                        <img src={getImageUrl(siteImages.philImage2)} className="w-full h-full object-cover" alt="Mission 2"/>
+                      {siteConfig.philImage2 ? (
+                        <img src={getImageUrl(siteConfig.philImage2)} className="w-full h-full object-cover" alt="Mission 2"/>
                       ) : (
                         <div className="flex flex-col h-full items-center justify-center text-slate-400"><ImageIcon className="h-8 w-8 mb-2 opacity-50"/></div>
                       )}
@@ -264,7 +272,70 @@ const AdminConfigPage = () => {
             </Card>
           </TabsContent>
 
-          {/* ONGLET 2 : LE BUREAU */}
+          {/* ONGLET 2 : STATISTIQUES */}
+          <TabsContent value="stats">
+            <Card className="border-0 shadow-sm bg-white">
+              <CardHeader className="bg-slate-100/50 border-b">
+                <CardTitle className="text-[#0A2A5C] text-xl">Statistiques d'Accueil</CardTitle>
+                <CardDescription>Modifiez les 4 chiffres clés qui apparaissent sous la bannière d'accueil.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  
+                  {/* Stat 1 */}
+                  <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 1 (Chiffre)</Label>
+                      <Input value={siteConfig.stat1Number} onChange={(e) => setSiteConfig({...siteConfig, stat1Number: e.target.value})} className="font-bold text-lg mt-1" placeholder="ex: 2016" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 1 (Texte)</Label>
+                      <Input value={siteConfig.stat1Label} onChange={(e) => setSiteConfig({...siteConfig, stat1Label: e.target.value})} className="mt-1" placeholder="ex: Année de création" />
+                    </div>
+                  </div>
+
+                  {/* Stat 2 */}
+                  <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 2 (Chiffre)</Label>
+                      <Input value={siteConfig.stat2Number} onChange={(e) => setSiteConfig({...siteConfig, stat2Number: e.target.value})} className="font-bold text-lg mt-1" placeholder="ex: +500" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 2 (Texte)</Label>
+                      <Input value={siteConfig.stat2Label} onChange={(e) => setSiteConfig({...siteConfig, stat2Label: e.target.value})} className="mt-1" placeholder="ex: Anciens élèves" />
+                    </div>
+                  </div>
+
+                  {/* Stat 3 */}
+                  <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 3 (Chiffre)</Label>
+                      <Input value={siteConfig.stat3Number} onChange={(e) => setSiteConfig({...siteConfig, stat3Number: e.target.value})} className="font-bold text-lg mt-1" placeholder="ex: 15" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 3 (Texte)</Label>
+                      <Input value={siteConfig.stat3Label} onChange={(e) => setSiteConfig({...siteConfig, stat3Label: e.target.value})} className="mt-1" placeholder="ex: Pays de résidence" />
+                    </div>
+                  </div>
+
+                  {/* Stat 4 */}
+                  <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 4 (Chiffre)</Label>
+                      <Input value={siteConfig.stat4Number} onChange={(e) => setSiteConfig({...siteConfig, stat4Number: e.target.value})} className="font-bold text-lg mt-1" placeholder="ex: 100%" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-bold text-slate-500 uppercase">Statistique 4 (Texte)</Label>
+                      <Input value={siteConfig.stat4Label} onChange={(e) => setSiteConfig({...siteConfig, stat4Label: e.target.value})} className="mt-1" placeholder="ex: Engagement" />
+                    </div>
+                  </div>
+
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ONGLET 3 : LE BUREAU */}
           <TabsContent value="bureau">
             <div className="grid lg:grid-cols-2 gap-8">
               <Card className="border-0 shadow-sm bg-white h-fit">
@@ -279,7 +350,6 @@ const AdminConfigPage = () => {
                     </Avatar>
                     <div className="flex-1 relative overflow-hidden group">
                       <Label className="text-xs mb-1 block uppercase font-bold text-slate-500">Photo de profil (Carrée)</Label>
-                      {/* Ici on force le ratio 1 (carré parfait) */}
                       <Input type="file" className="text-xs cursor-pointer bg-white relative z-10" accept="image/*" onChange={(e) => handleFileSelect(e, 'member', 'image', 1)} disabled={uploading}/>
                     </div>
                   </div>
