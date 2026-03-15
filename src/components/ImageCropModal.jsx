@@ -58,7 +58,12 @@ const ImageCropModal = ({ imageSrc, aspect = 16 / 9, onClose, onComplete, isUplo
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+    // CORRECTIONS ICI : z-[9999], pointer-events-auto, et stopPropagation()
+    <div 
+      className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-auto"
+      onPointerDownCapture={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* En-tête */}
