@@ -2,13 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   CheckCircle, Calendar, CreditCard, 
-  History, Phone, Minus, Plus, Lock, 
-  Users, Sparkles, LayoutDashboard, HeartHandshake,
-  ArrowRight, ShieldCheck, FileText, Check, Bell
+  Phone, Minus, Plus, Users, Sparkles, HeartHandshake,
+  ArrowRight, Bell
 } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
@@ -24,8 +22,7 @@ const MemberPage = () => {
   const [amountDue, setAmountDue] = useState(0);
   const [monthsToPay, setMonthsToPay] = useState(1);
   const [isUpToDate, setIsUpToDate] = useState(globalIsMember);
-  const [history, setHistory] = useState([]); 
-  const [hasDeclared, setHasDeclared] = useState(false); // Pour bloquer le bouton après déclaration
+  const [hasDeclared, setHasDeclared] = useState(false); 
 
   const MONTHLY_FEE = 2000;
   const TREASURER_PHONE = "77 812 34 56"; // À remplacer par le vrai numéro
@@ -46,10 +43,6 @@ const MemberPage = () => {
           if (freshUserData.paidUntil !== user.paidUntil) {
               updateUserData(freshUserData);
           }
-
-          const resHistory = await api.get(`/payment/history/${userId}`);
-          setHistory(resHistory.data);
-          
         } catch (error) {
           console.error("Erreur synchro:", error);
         }
@@ -100,8 +93,6 @@ const MemberPage = () => {
     const userId = user.id || user._id;
 
     try {
-      // On enregistre la demande en base de données avec le statut 'pending' (en attente)
-      // Le backend se chargera d'envoyer le mail à l'admin
       await api.post('/payment/declare', {
           userId: userId,
           amount: monthsToPay * MONTHLY_FEE,
@@ -189,7 +180,7 @@ const MemberPage = () => {
           <div>
             <h1 className="text-3xl font-black text-[#0A2A5C] mb-2 tracking-tight">Espace Membre</h1>
             <p className="text-slate-500 font-light">
-              Bienvenue, <span className="font-bold text-slate-800">{user?.prenom}</span>. Voici le statut de votre adhésion.
+              Bienvenue, <span className="font-bold text-slate-800">{user?.prenom || user?.name}</span>. Voici le statut de votre adhésion.
             </p>
           </div>
           {isUpToDate && (
@@ -310,42 +301,6 @@ const MemberPage = () => {
                 <div className="text-lg font-mono font-bold mb-2 relative z-10">
                     {TREASURER_PHONE}
                 </div>
-            </Card>
-
-            {/* HISTORIQUE */}
-            <Card className="border border-slate-200 shadow-sm rounded-none bg-white">
-                <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
-                    <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <History className="h-4 w-4" /> Historique récent
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 overflow-y-auto max-h-[300px]">
-                    {history.length > 0 ? (
-                        <div className="divide-y divide-slate-100">
-                            {history.map((pay, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
-                                    <div className="flex flex-col">
-                                        <span className="font-black text-[#0A2A5C] text-sm">{pay.amount.toLocaleString()} F</span>
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-1">{pay.type || "Cotisation"}</span>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end">
-                                        <div className="text-xs font-medium text-slate-600 mb-1">{new Date(pay.date).toLocaleDateString()}</div>
-                                        {pay.status === 'pending' ? (
-                                            <Badge variant="outline" className="text-[9px] py-0 h-4 bg-amber-50 text-amber-700 border-amber-200 rounded-none uppercase tracking-widest">En attente</Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="text-[9px] py-0 h-4 bg-green-50 text-green-700 border-green-200 rounded-none uppercase tracking-widest">Validé</Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-slate-300">
-                            <FileText className="w-8 h-8 mb-3 opacity-20" />
-                            <p className="text-xs font-light">Aucune transaction.</p>
-                        </div>
-                    )}
-                </CardContent>
             </Card>
           </div>
 
