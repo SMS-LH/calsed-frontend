@@ -45,8 +45,8 @@ const DirectoryPage = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const response = await api.get('/users');
-        // Axios place les données JSON directement dans response.data
+        // MODIFICATION ICI : On utilise la nouvelle route dédiée à l'annuaire public
+        const response = await api.get('/users/directory');
         setMembers(response.data);
       } catch (error) {
         console.error("Erreur chargement annuaire:", error);
