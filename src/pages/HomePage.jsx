@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ArrowRight, GraduationCap, Globe2,
+  GraduationCap, Globe2,
   Users2, HeartHandshake, BookOpen,
   ChevronRight, ArrowUpRight, Lightbulb,
   Building2
@@ -68,42 +68,41 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
       
-      {/* --- HERO SECTION (Vitrine Publique) --- */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white">
+      {/* --- HERO SECTION (Fond sombre pour la Navbar transparente) --- */}
+      <section className="relative pt-32 pb-16 lg:pt-48 lg:pb-24 overflow-hidden bg-[#0A2A5C]">
         {/* Décors d'arrière-plan */}
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-slate-50 rounded-bl-[100px] -z-10 hidden lg:block"></div>
-        <div className="absolute top-20 right-20 w-72 h-72 bg-amber-400/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-[#0A2A5C]/5 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-800/40 via-transparent to-transparent -z-10"></div>
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -z-10"></div>
 
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
             {/* Colonne Texte */}
             <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-2xl">
               <motion.div variants={fadeUp} className="mb-6">
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-none px-4 py-1.5 rounded-full font-semibold uppercase tracking-wider text-xs">
+                <Badge className="bg-white/10 text-amber-400 hover:bg-white/20 border border-white/10 px-4 py-1.5 rounded-full font-semibold uppercase tracking-wider text-xs backdrop-blur-sm">
                   Association Officielle
                 </Badge>
               </motion.div>
               
-              <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 mb-6 leading-[1.15] tracking-tight">
+              <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-[1.15] tracking-tight">
                 L'excellence scientifique, <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0A2A5C] to-blue-600">notre engagement commun.</span>
+                <span className="text-amber-400">notre engagement commun.</span>
               </motion.h1>
               
-              <motion.p variants={fadeUp} className="text-lg text-slate-600 mb-10 leading-relaxed font-light">
-                Bienvenue sur le site du Collectif des Anciens du Lycée Scientifique d'Excellence de Diourbel (CALSED). Nous fédérons les talents de demain pour soutenir notre lycée et bâtir un réseau solidaire à travers le monde.
+              <motion.p variants={fadeUp} className="text-lg text-blue-100/90 mb-10 leading-relaxed font-light">
+                Bienvenue sur le site du Collectif des Anciens du Lycée Scientifique d'Excellence de Diourbel (CALSED). Nous fédérons les talents de demain pour soutenir notre lycée et bâtir un réseau professionnel solide.
               </motion.p>
               
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4">
-                <Link to="/don">
-                  <Button size="lg" className="w-full sm:w-auto bg-[#0A2A5C] hover:bg-blue-800 text-white h-14 px-8 rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all hover:-translate-y-1">
-                    Soutenir nos actions
+                <Link to="/inscription">
+                  <Button size="lg" className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-900 h-14 px-8 rounded-xl font-bold shadow-lg transition-all hover:-translate-y-1">
+                    Espace Alumni
                   </Button>
                 </Link>
-                <Link to="/inscription">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-slate-200 text-slate-700 hover:bg-slate-50 h-14 px-8 rounded-xl font-semibold transition-all">
-                    Espace Alumni
+                <Link to="/contact">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/20 text-white hover:bg-white/10 h-14 px-8 rounded-xl font-semibold transition-all backdrop-blur-sm">
+                    Nous contacter
                   </Button>
                 </Link>
               </motion.div>
@@ -116,16 +115,16 @@ const HomePage = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative hidden md:block"
             >
-              <div className="aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-8 border-white bg-slate-100 relative">
+              <div className="aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#061836] relative">
                 {images.heroImage ? (
-                  <img src={getImageUrl(images.heroImage)} alt="Lycée Scientifique d'Excellence de Diourbel" className="w-full h-full object-cover" />
+                  <img src={getImageUrl(images.heroImage)} alt="Lycée Scientifique d'Excellence de Diourbel" className="w-full h-full object-cover opacity-90" />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                  <div className="w-full h-full flex flex-col items-center justify-center text-blue-300/50">
                     <Building2 className="w-16 h-16 mb-4 opacity-50" />
-                    <p className="font-medium">Image du Lycée ou de l'association</p>
+                    <p className="font-medium text-sm">Image de couverture (Admin)</p>
                   </div>
                 )}
-                {/* Petite carte flottante déco (Grand public) */}
+                {/* Petite carte flottante déco */}
                 <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-4 animate-bounce hover:animate-none">
                   <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
                     <GraduationCap className="w-6 h-6" />
@@ -142,15 +141,15 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- STATS RAPIDES (Impact) --- */}
-      <section className="py-12 bg-[#0A2A5C] text-white">
+      {/* --- STATS RAPIDES (Collées sous le Hero, même couleur) --- */}
+      <section className="py-12 bg-[#08224a] text-white border-t border-white/5">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-blue-800/50">
             {[
               { number: "2016", label: "Année de création" },
               { number: "+500", label: "Anciens élèves" },
               { number: "15", label: "Pays de résidence" },
-              { number: "100%", label: "Engagement solidaire" }
+              { number: "100%", label: "Engagement" }
             ].map((stat, i) => (
               <div key={i} className="text-center px-4">
                 <p className="text-3xl md:text-4xl font-black text-amber-400 mb-1">{stat.number}</p>
@@ -161,17 +160,17 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- NOS MISSIONS (Pour le grand public) --- */}
+      {/* --- NOS MISSIONS --- */}
       <section className="py-24 bg-slate-50">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Pourquoi le CALSED existe ?</h2>
-            <p className="text-slate-600">Notre association repose sur trois piliers fondamentaux visant à créer un impact positif et durable.</p>
+            <p className="text-slate-600">Notre association repose sur trois piliers fondamentaux visant à créer un impact positif et pérenne.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: BookOpen, color: "text-blue-600", bg: "bg-blue-100", title: "Soutenir notre Lycée", text: "Nous accompagnons le LSED par des dons de matériel, des bourses d'études et des journées d'orientation pour les élèves actuels." },
+              { icon: BookOpen, color: "text-blue-600", bg: "bg-blue-100", title: "Soutenir notre Lycée", text: "Nous accompagnons le LSED par des dons de matériel pédagogique et l'organisation de journées d'orientation pour les élèves actuels." },
               { icon: Users2, color: "text-amber-600", bg: "bg-amber-100", title: "Fédérer les Alumni", text: "Nous maintenons le lien entre toutes les promotions à travers un annuaire mondial, des événements et des rencontres régulières." },
               { icon: Lightbulb, color: "text-green-600", bg: "bg-green-100", title: "Inspirer l'Excellence", text: "Nous valorisons les parcours inspirants de nos membres pour motiver la jeunesse sénégalaise à embrasser les carrières scientifiques." }
             ].map((feature, i) => (
@@ -189,7 +188,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- SOUTIEN & PARTENARIAT (Texte + 1 Image) --- */}
+      {/* --- PARTENARIAT --- */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -198,7 +197,10 @@ const HomePage = () => {
               {images.philImage1 ? (
                 <img src={getImageUrl(images.philImage1)} alt="Actions CALSED" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center"><HeartHandshake className="w-16 h-16 text-slate-300" /></div>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                    <HeartHandshake className="w-16 h-16 mb-4 opacity-50" />
+                    <p className="font-medium text-sm mt-2">Image d'action (Admin)</p>
+                </div>
               )}
             </div>
 
@@ -206,22 +208,17 @@ const HomePage = () => {
               <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-none px-3 py-1 mb-4">
                 Agir ensemble
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Investissez dans la jeunesse scientifique.</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Investissez dans l'excellence.</h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                Le CALSED finance régulièrement des projets pédagogiques, équipe les laboratoires du lycée et soutient les étudiants issus de milieux modestes dans leurs études supérieures.
+                Le CALSED s'implique activement dans l'amélioration du cadre d'apprentissage du lycée en finançant des projets pédagogiques et en contribuant à l'équipement des laboratoires scientifiques.
               </p>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                Que vous soyez un parent d'élève, une entreprise ou un philanthrope, votre soutien est précieux.
+                Devenez partenaire de nos initiatives pour accompagner le développement de l'établissement et soutenir nos projets.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/don">
-                  <Button className="bg-[#0A2A5C] text-white hover:bg-blue-800 rounded-xl px-8 h-12 w-full sm:w-auto">
-                    Faire un don
-                  </Button>
-                </Link>
                 <Link to="/contact">
-                  <Button variant="outline" className="rounded-xl px-8 h-12 w-full sm:w-auto border-slate-300 text-slate-700">
+                  <Button className="bg-[#0A2A5C] text-white hover:bg-blue-800 rounded-xl px-8 h-12 w-full sm:w-auto">
                     Devenir partenaire
                   </Button>
                 </Link>
@@ -232,7 +229,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- ACTUALITÉS PUBLIQUES --- */}
+      {/* --- ACTUALITÉS --- */}
       <section className="py-24 bg-slate-50">
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex justify-between items-end mb-12">
@@ -294,11 +291,10 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* --- CTA FINAL (Double Audience) --- */}
+      {/* --- CTA FINAL --- */}
       <section className="py-20 bg-white border-t border-slate-100">
         <div className="container mx-auto px-6">
             <div className="bg-[#0A2A5C] rounded-3xl p-10 md:p-16 text-center relative overflow-hidden shadow-2xl">
-              {/* Cercles déco */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
               
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 relative z-10">Faites partie de l'histoire</h2>
