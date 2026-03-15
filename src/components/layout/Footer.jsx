@@ -238,9 +238,6 @@ const Footer = () => {
             <p className="text-sm text-primary-foreground/60 text-center sm:text-left">
               © {currentYear} CALSED. Tous droits réservés.
             </p>
-            <p className="text-sm text-primary-foreground/60 flex items-center gap-1">
-              Fait avec <Heart className="h-4 w-4 text-secondary fill-secondary" /> par les anciens
-            </p>
           </div>
         </div>
       </div>
