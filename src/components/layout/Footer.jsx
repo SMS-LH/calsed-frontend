@@ -64,9 +64,9 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { name: "Facebook", icon: Facebook, href: "#", color: "hover:text-blue-500" },
-    { name: "Twitter", icon: Twitter, href: "#", color: "hover:text-sky-500" },
-    { name: "LinkedIn", icon: Linkedin, href: "#", color: "hover:text-blue-600" },
+    { name: "Facebook", icon: Facebook, href: "https://www.facebook.com/share/1HiSExEqDm/", color: "hover:text-blue-500" },
+    { name: "Twitter", icon: Twitter, href: "https://x.com/LSED_Alumni", color: "hover:text-sky-500" },
+    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/lyc%C3%A9e-scientifique-d-excellence-de-diourbel/", color: "hover:text-blue-600" },
     { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/c.a.lsed?igsh=MWZhbXBycTBqZnRqYQ==", color: "hover:text-pink-500" },
   ];
 
@@ -211,10 +211,10 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-secondary shrink-0" />
                 <a 
-                  href="mailto:contact@calsed.sn" 
+                  href="mailto:reseaucalsed@gmail.com" 
                   className="text-sm text-primary-foreground/70 hover:text-secondary transition-colors"
                 >
-                  RESEAUCALSED@gmail.com
+                  reseaucalsed@gmail.com
                 </a>
               </div>
               <div className="flex items-center gap-3">

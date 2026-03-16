@@ -69,10 +69,10 @@ const ContactPage = () => {
   };
 
   const socialLinks = [
-    { name: "LinkedIn", icon: Linkedin, href: "#", color: "hover:text-blue-700" },
-    { name: "Twitter", icon: Twitter, href: "#", color: "hover:text-sky-500" },
-    { name: "Facebook", icon: Facebook, href: "#", color: "hover:text-blue-600" },
-    { name: "Instagram", icon: Instagram, href: "#", color: "hover:text-pink-600" }
+    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/lyc%C3%A9e-scientifique-d-excellence-de-diourbel/", color: "hover:text-blue-700" },
+    { name: "Twitter", icon: Twitter, href: "https://x.com/LSED_Alumni", color: "hover:text-sky-500" },
+    { name: "Facebook", icon: Facebook, href: "https://www.facebook.com/share/1HiSExEqDm/", color: "hover:text-blue-600" },
+    { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/c.a.lsed?igsh=MWZhbXBycTBqZnRqYQ==", color: "hover:text-pink-600" }
   ];
 
   if (isSubmitted) {
@@ -142,7 +142,7 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs font-bold text-blue-300 uppercase tracking-wider mb-0.5 md:mb-1">Email</p>
-                      <a href="mailto:contact@calsed.sn" className="text-base md:text-lg font-medium hover:text-amber-400 transition-colors break-all sm:break-normal">contact@calsed.sn</a>
+                      <a href="mailto:reseaucalsed@gmail.com" className="text-base md:text-lg font-medium hover:text-amber-400 transition-colors break-all sm:break-normal">reseaucalsed@gmail.com</a>
                       <p className="text-[10px] md:text-xs text-blue-200/60 mt-0.5 md:mt-1">Réponse sous 24h</p>
                     </div>
                   </div>
@@ -153,7 +153,7 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs font-bold text-blue-300 uppercase tracking-wider mb-0.5 md:mb-1">Téléphone</p>
-                      <a href="tel:+221339711000" className="text-base md:text-lg font-medium hover:text-amber-400 transition-colors">+221 33 971 10 00</a>
+                      <a href="tel:+221339711000" className="text-base md:text-lg font-medium hover:text-amber-400 transition-colors">+221 77 123 45 67</a>
                       <p className="text-[10px] md:text-xs text-blue-200/60 mt-0.5 md:mt-1">Lun-Ven, 8h-18h</p>
                     </div>
                   </div>
