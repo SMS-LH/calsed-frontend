@@ -67,7 +67,7 @@ const Footer = () => {
     { name: "Facebook", icon: Facebook, href: "#", color: "hover:text-blue-500" },
     { name: "Twitter", icon: Twitter, href: "#", color: "hover:text-sky-500" },
     { name: "LinkedIn", icon: Linkedin, href: "#", color: "hover:text-blue-600" },
-    { name: "Instagram", icon: Instagram, href: "#", color: "hover:text-pink-500" },
+    { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/c.a.lsed?igsh=MWZhbXBycTBqZnRqYQ==", color: "hover:text-pink-500" },
   ];
 
   return (
@@ -214,7 +214,7 @@ const Footer = () => {
                   href="mailto:contact@calsed.sn" 
                   className="text-sm text-primary-foreground/70 hover:text-secondary transition-colors"
                 >
-                  contact@calsed.sn
+                  RESEAUCALSED@gmail.com
                 </a>
               </div>
               <div className="flex items-center gap-3">
