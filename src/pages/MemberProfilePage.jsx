@@ -178,8 +178,8 @@ const MemberProfilePage = () => {
                 </section>
             )}
 
-            {/* FORMATION */}
-            {(member.university || member.education) && (
+            {/* FORMATION (CORRIGÉ ICI) */}
+            {(member.university || (member.education && member.education.length > 0)) && (
                 <section>
                     <h3 className="text-base md:text-lg font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
                         <span className="w-1 h-5 md:h-6 bg-slate-300 rounded-full block"></span>
@@ -193,12 +193,30 @@ const MemberProfilePage = () => {
                                 </div>
                                 <div className="flex-1">
                                     {member.university && (
-                                        <h4 className="font-bold text-slate-900 text-sm md:text-lg mb-1.5">{member.university}</h4>
+                                        <h4 className="font-bold text-slate-900 text-sm md:text-lg mb-4">{member.university}</h4>
                                     )}
-                                    {member.education && (
-                                        <p className="text-slate-600 leading-relaxed whitespace-pre-line text-xs md:text-sm">
-                                            {member.education}
-                                        </p>
+                                    
+                                    {/* CORRECTION DU BUG : On boucle sur le tableau d'éducation */}
+                                    {member.education && Array.isArray(member.education) ? (
+                                        <div className="space-y-4 relative border-l-2 border-slate-100 ml-1 py-1">
+                                            {member.education.map((edu, index) => (
+                                                <div key={edu._id || index} className="pl-4 md:pl-5 relative">
+                                                    <div className="absolute -left-[9px] top-1.5 w-4 h-4 bg-white border-2 border-slate-300 rounded-full" />
+                                                    <h5 className="font-bold text-slate-800 text-sm md:text-base leading-tight">{edu.school}</h5>
+                                                    <p className="text-slate-600 text-xs md:text-sm mt-0.5">{edu.degree}</p>
+                                                    <span className="text-[10px] md:text-xs text-slate-500 font-semibold bg-slate-50 px-2 py-0.5 rounded mt-1 inline-block">
+                                                        {edu.year}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        // Au cas où ce soit un vieux compte avec du texte simple
+                                        typeof member.education === 'string' && (
+                                            <p className="text-slate-600 leading-relaxed whitespace-pre-line text-xs md:text-sm">
+                                                {member.education}
+                                            </p>
+                                        )
                                     )}
                                 </div>
                             </div>
