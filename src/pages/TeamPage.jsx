@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // <-- AJOUT ICI
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useContent } from "@/context/ContentContext";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,8 @@ import {
   Users2,
   School,
   Target,
-  Award,
   ArrowRight,
-  HeartHandshake,
-  Globe2
+  HeartHandshake
 } from "lucide-react";
 import api from "@/api/axios";
 
@@ -36,7 +34,7 @@ const stagger = {
 const TeamPage = () => {
   const { teamMembers } = useContent();
   const [schoolImage, setSchoolImage] = useState("");
-  const navigate = useNavigate(); // <-- AJOUT ICI
+  const navigate = useNavigate();
 
   // Récupération de l'image de l'école configurée par l'admin
   useEffect(() => {
@@ -225,19 +223,6 @@ const TeamPage = () => {
                   C'est entre ses murs que commence notre histoire commune. Au-delà des mathématiques et de la physique, nous y avons appris la solidarité et la force du collectif. Le CALSED est né de cette volonté de ne jamais rompre ce lien unique.
                 </p>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 md:gap-6 mt-8 md:mt-10">
-                <div className="bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-                  <Award className="h-6 w-6 md:h-8 md:w-8 text-amber-500 mb-2" />
-                  <p className="text-xl md:text-2xl font-bold text-[#0A2A5C]">100%</p>
-                  <p className="text-[10px] md:text-sm text-slate-500 font-medium text-center">Réussite au BAC</p>
-                </div>
-                <div className="bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center">
-                  <Globe2 className="h-6 w-6 md:h-8 md:w-8 text-blue-600 mb-2" />
-                  <p className="text-xl md:text-2xl font-bold text-[#0A2A5C]">Monde</p>
-                  <p className="text-[10px] md:text-sm text-slate-500 font-medium text-center">Réseau global</p>
-                </div>
-              </div>
             </motion.div>
 
           </div>
@@ -298,7 +283,7 @@ const TeamPage = () => {
             <Button 
               size="lg"
               className="w-full sm:w-auto bg-amber-500 text-slate-900 hover:bg-amber-400 h-12 md:h-14 px-8 md:px-10 rounded-xl font-bold shadow-lg transition-transform active:scale-95" 
-              onClick={() => navigate('/contact')} /* <-- MODIFICATION ICI */
+              onClick={() => navigate('/contact')} 
             >
               Nous écrire <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
             </Button>
