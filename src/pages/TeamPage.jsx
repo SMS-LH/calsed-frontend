@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // <-- AJOUT ICI
 import { motion } from "framer-motion";
 import { useContent } from "@/context/ContentContext";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ const stagger = {
 const TeamPage = () => {
   const { teamMembers } = useContent();
   const [schoolImage, setSchoolImage] = useState("");
+  const navigate = useNavigate(); // <-- AJOUT ICI
 
   // Récupération de l'image de l'école configurée par l'admin
   useEffect(() => {
@@ -296,7 +298,7 @@ const TeamPage = () => {
             <Button 
               size="lg"
               className="w-full sm:w-auto bg-amber-500 text-slate-900 hover:bg-amber-400 h-12 md:h-14 px-8 md:px-10 rounded-xl font-bold shadow-lg transition-transform active:scale-95" 
-              onClick={() => window.location.href = 'mailto:contact@calsed.sn'}
+              onClick={() => navigate('/contact')} /* <-- MODIFICATION ICI */
             >
               Nous écrire <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
             </Button>
