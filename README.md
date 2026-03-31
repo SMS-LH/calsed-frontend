@@ -2,7 +2,7 @@
 
 Bienvenue sur le code source de l'interface utilisateur du projet **CALSED** (Collectif des Anciens du Lycée Scientifique d'Excellence de Diourbel).
 
-> ⚠️ **Avertissement :** Ce code est partagé uniquement pour que l'on puisse m'aider à le lire et le corriger. Ce n'est pas un projet open-source collaboratif. Merci de ne pas modifier le code sans m'en parler.
+
 
 ## 🚀 Ce que fait ce dossier (Frontend)
 C'est la partie visuelle du site (le design, les boutons, les pages).
