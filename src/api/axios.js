@@ -3,7 +3,7 @@ import axios from 'axios';
 // --- LOGIQUE DE BASE URL SÉCURISÉE ---
 const getBaseURL = () => {
   // On récupère l'URL depuis les variables d'env (CRA ou Vite)
-  let url = process.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || "http://localhost:5000";
+  let url = process.env.REACT_APP_API_URL || import.meta.env.VITE_API_URL || "https://calsed-frontend.vercel.app/";
   
   // Nettoyage : On s'assure que l'URL ne finit pas par un slash inutile
   url = url.replace(/\/$/, "");
