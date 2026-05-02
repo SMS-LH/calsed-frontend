@@ -71,94 +71,77 @@ const HomePage = () => {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
       
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 lg:pt-48 lg:pb-32 overflow-hidden bg-[#0A2A5C]">
-        
-        {images.heroImage && (
-          <div className="absolute inset-0 z-0">
-            <img 
-              src={getImageUrl(images.heroImage)} 
-              alt="Fond Réseau CALSED" 
-              className="w-full h-full object-cover opacity-20 mix-blend-overlay"
-            />
-          </div>
-        )}
+      <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 lg:pt-48 lg:pb-32 overflow-hidden">
+  
+  {/* IMAGE DE FOND */}
+  {images.heroImage && (
+    <div className="absolute inset-0 z-0">
+      <img 
+        src={getImageUrl(images.heroImage)} 
+        alt="Fond CALSED" 
+        className="w-full h-full object-cover"
+      />
+    </div>
+  )}
 
-        {/* Décors d'arrière-plan */}
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-800/40 via-transparent to-transparent z-10"></div>
-        <div className="absolute bottom-10 left-10 w-64 h-64 md:w-96 md:h-96 bg-amber-500/10 rounded-full blur-3xl z-10"></div>
+  {/* OVERLAY SOMBRE */}
+  <div className="absolute inset-0 bg-[#0A2A5C]/70 z-10"></div>
 
-        {/* Contenu */}
-        <div className="container mx-auto px-4 md:px-6 lg:px-12 relative z-20">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            
-            {/* Colonne Texte */}
-            <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
-              <motion.div variants={fadeUp} className="mb-4 md:mb-6">
-                <Badge className="bg-white/10 text-amber-400 hover:bg-white/20 border border-white/10 px-3 md:px-4 py-1.5 rounded-full font-semibold uppercase tracking-wider text-[10px] md:text-xs backdrop-blur-sm">
-                  Association Officielle
-                </Badge>
-              </motion.div>
-              
-              <motion.h1 variants={fadeUp} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4 md:mb-6 leading-tight md:leading-[1.15] tracking-tight">
-                L'excellence scientifique, <br className="hidden sm:block" />
-                <span className="text-amber-400">notre engagement commun.</span>
-              </motion.h1>
-              
-              <motion.p variants={fadeUp} className="text-base md:text-lg text-blue-100/90 mb-8 md:mb-10 leading-relaxed font-light px-2 lg:px-0">
-                Bienvenue sur le site du Collectif des Anciens du Lycée Scientifique d'Excellence de Diourbel (CALSED). Nous fédérons les talents de demain pour soutenir notre lycée et bâtir un réseau professionnel solide.
-              </motion.p>
-              
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center lg:justify-start">
-                <Link to="/inscription" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 h-12 md:h-14 px-6 md:px-8 rounded-xl font-bold shadow-lg transition-all hover:-translate-y-1 text-sm md:text-base">
-                    Espace Alumni
-                  </Button>
-                </Link>
-                <Link to="/contact" className="w-full sm:w-auto">
-                  <Button size="lg" variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 h-12 md:h-14 px-6 md:px-8 rounded-xl font-semibold transition-all backdrop-blur-sm text-sm md:text-base">
-                    Nous contacter
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
+  {/* DECOR */}
+  <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-800/40 via-transparent to-transparent z-10"></div>
+  <div className="absolute bottom-10 left-10 w-64 h-64 md:w-96 md:h-96 bg-amber-500/10 rounded-full blur-3xl z-10"></div>
 
-            {/* Colonne Image (Caché sur très petits écrans si besoin, mais ici visible) */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative hidden lg:block"
-            >
-              <div className="aspect-square md:aspect-[4/3] rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#061836] relative">
-                  {images.schoolImage ? (
-                    <img 
-                      src={getImageUrl(images.schoolImage)} 
-                      alt="Lycée Scientifique d'Excellence" 
-                      className="w-full h-full object-cover" 
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-blue-300/50">
-                      <Building2 className="w-12 h-12 md:w-16 md:h-16 mb-4 opacity-50" />
-                      <p className="font-medium text-xs md:text-sm">Photo du Lycée (Optionnelle)</p>
-                    </div>
-                  )}
-                {/* Petite carte flottante déco */}
-                <div className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 bg-white p-3 md:p-4 rounded-xl md:rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3 md:gap-4 animate-bounce hover:animate-none">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 shrink-0">
-                    <GraduationCap className="w-5 h-5 md:w-6 md:h-6" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] md:text-xs text-slate-500 font-medium">Notre fierté</p>
-                    <p className="text-xs md:text-sm font-bold text-slate-900 line-clamp-1">Lycée Scientifique d'Excellence</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+  {/* CONTENU */}
+  <div className="container mx-auto px-4 md:px-6 lg:px-12 relative z-20">
+    <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      
+      {/* TEXTE */}
+      <motion.div initial="hidden" animate="visible" variants={stagger} className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
+        <motion.div variants={fadeUp} className="mb-4 md:mb-6">
+          <Badge className="bg-white/10 text-amber-400 border border-white/10 px-4 py-1.5 rounded-full text-xs backdrop-blur-sm">
+            Association Officielle
+          </Badge>
+        </motion.div>
 
-          </div>
+        <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+          L'excellence scientifique, <br />
+          <span className="text-amber-400">notre engagement commun.</span>
+        </motion.h1>
+
+        <motion.p variants={fadeUp} className="text-lg text-blue-100 mb-10">
+          Bienvenue sur le site du CALSED. Nous fédérons les talents pour soutenir notre lycée et bâtir un réseau fort.
+        </motion.p>
+
+        <motion.div variants={fadeUp} className="flex gap-4 justify-center lg:justify-start">
+          <Link to="/inscription">
+            <Button className="bg-amber-500 text-slate-900 font-bold px-8 h-12 rounded-xl">
+              Espace Alumni
+            </Button>
+          </Link>
+
+          <Link to="/contact">
+            <Button variant="outline" className="border-white text-white px-8 h-12 rounded-xl">
+              Contact
+            </Button>
+          </Link>
+        </motion.div>
+      </motion.div>
+
+      {/* IMAGE DU LYCEE */}
+      <div className="hidden lg:block">
+        <div className="rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[400px]">
+          <img 
+            src={images.schoolImage ? getImageUrl(images.schoolImage) : "/images/lycee.jpg"} 
+            alt="Lycée"
+            className="w-full h-full object-cover"
+          />
         </div>
-      </section>
+      </div>
 
+    </div>
+  </div>
+
+</section>
       {/* --- STATS RAPIDES --- */}
       <section className="py-8 md:py-12 bg-[#08224a] text-white border-t border-white/5">
         <div className="container mx-auto px-4 md:px-6 lg:px-12">
