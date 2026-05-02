@@ -131,7 +131,7 @@ const HomePage = () => {
       <div className="hidden lg:block">
         <div className="rounded-3xl overflow-hidden shadow-2xl border border-white/10 h-[400px]">
           <img 
-            src={images.schoolImage ? getImageUrl(images.schoolImage) : "/images/lycee.jpg"} 
+            src={images.schoolImage ? getImageUrl(images.schoolImage) : "/lycee.jpg"} 
             alt="Lycée"
             className="w-full h-full object-cover"
           />
